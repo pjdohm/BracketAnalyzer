@@ -75,3 +75,6 @@ for (i in 1:n) {
     M[i,j] <- m
   }
 }
+
+nSim <- 1000 # number of tournaments to simulate
+replicate(nSim, simTournament(t, M))
