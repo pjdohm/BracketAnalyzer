@@ -1,4 +1,4 @@
-library(rlang)
+library(rlang) # for duplicate function
 
 simGame <- function(teams, matchups) {
   # function to simulate a game
@@ -53,7 +53,7 @@ simTournament <- function(bracket, matchups) {
   # returns winner of tournament
   
   nTeams <- length(bracket)
-  newBracket <- duplicated(bracket)
+  newBracket <- bracket
   nRounds <- log(nTeams, base=2)
   
   for (round in 1:nRounds) {
@@ -63,7 +63,11 @@ simTournament <- function(bracket, matchups) {
   return(newBracket)
 }
 
-n <- 8 # number of teams
+
+
+########### TEST SIMULATION ###########
+
+n <- 16 # number of teams
 t <- 1:n # teams
 M <- matrix(0L, nrow=n, ncol=n) # matchup probability matrix
 
@@ -77,4 +81,16 @@ for (i in 1:n) {
 }
 
 nSim <- 1000 # number of tournaments to simulate
-replicate(nSim, simTournament(t, M))
+# simulate prior distribution
+prior <- table(replicate(nSim, simTournament(t, M)))/nSim
+
+round1 <- seq(1, n, by=2) + replicate(n/2, sample(c(0,1), size=1)) # arbitrary first round results
+# simulate posterior
+posterior <- table(replicate(nSim, simTournament(round1, M)))/nSim
+
+prior
+posterior
+
+par(mfrow=c(1,2))
+hist(prior)
+hist(posterior)
