@@ -1,0 +1,162 @@
+---
+title: "Data Generation"
+author: "Yuchen Li (li215), section 1UG"
+date: "April 14, 2019"
+output: 
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Team Powers
+
+## Standard Probability Distributions
+
+### Normal
+
+```{r}
+genNormalPowers <- function(n, mean=0, sd=1) {
+  # INPUT:
+  # n is the number of teams
+  
+  # OUTPUT:
+  # returns a vector of team powers, sorted in decreasing order
+  powers <- rnorm(n, mean, sd)
+  return(sort(abs(powers), decreasing=TRUE))
+}
+```
+
+## Accept-Reject
+
+```{r}
+# Reference: adapted from Yuchen Li (li215), HW2, Exercise 4
+
+acceptReject <- function(nsim, f, min, max, M) {
+  # INPUT:
+  # nsim is the number of simulations
+  # f is the target distribution
+  # min is the min value in the domain of f
+  # max is the max value in the domain of f
+  # max
+  # M >= sup{f(x)}
+  
+  # OUTPUT:
+  # returns a vector of random variates sampled from f, using the 
+  #   Accept-Reject method with Unif(min, max) as the reference distribution
+  k1 = 0             # counter for accepted samples
+  j1 = 0             # number of iterations required to get desired sample size
+  y1 = numeric(nsim)    # storing the sample
+  while(k1 < nsim){
+      u = runif(1)
+      x = runif(1, min, max)  # random variate from reference distribution
+      g1 = 1
+      if (u < f(x) / M / g1) {
+        # condition of accepting x in our sample
+        k1 = k1 + 1
+        y1[k1] = x
+      }
+      j1 = j1 + 1
+  }
+  return(sort(y1, decreasing=TRUE))
+}
+```
+
+## Inverse CDF
+
+```{r}
+inverseCDF <- function(n, inv_cdf) {
+  # INPUT:
+  # n is the number of simulations
+  # inv_cdf is the inverse CDF function for f
+  
+  # OUTPUT:
+  # returns a vector of random variates sampled from PDF f,
+  #   using the Inverse CDF method
+  u = runif(n)
+  y = numeric(n)
+  for (i in 1:n) {
+    y[i] = inv_cdf(u[i])
+  }
+  return(sort(y, decreasing=TRUE))
+}
+```
+
+# Cross-Team Winning Probabilities
+
+```{r}
+genCrossTeamWinningProbabilities <- function(powers) {
+  # INPUT:
+  # powers is the teams powers
+  
+  # OUTPUT:
+  # returns an n x n matrix M where M_{ij} is the probability of team-i beating team-j
+  n = length(powers)
+  probs = matrix(nrow=n, ncol=n)
+  for (i in 1:n) {
+    for (j in 1:n) {
+      probs[i,j] = powers[i] / (powers[i] + powers[j])
+    }
+  }
+  return(probs)
+}
+```
+
+# Seeding
+
+What are the other good methods than random selection? (In the data generation part, we do not have actual competition data yet.)
+
+```{r}
+# Example
+sample(1:8, size=2)
+```
+
+# Examples
+
+## Normal(0, 1) team powers
+```{r}
+genCrossTeamWinningProbabilities(
+ genNormalPowers(4) 
+)
+```
+
+## Normal(4, 10) team powers
+Note the probabilities are closer to 0.5 
+```{r}
+genCrossTeamWinningProbabilities(
+ genNormalPowers(4, mean=10, sd=0.1) 
+)
+```
+
+## Beta(3, 4) team powers using Accept-Reject
+```{r}
+# Test `acceptReject`
+f <- function(x) {return(x^2 * (1-x)^3)}
+hist(rbeta(1000, 3, 4))
+hist(acceptReject(1000, f, 0, 1, 0.0346))
+# Actual
+genCrossTeamWinningProbabilities(
+ acceptReject(4, f, 0, 1, 0.0346)
+)
+```
+
+## Exp(1) team powers using Inverse CDF
+```{r}
+# Test `inverseCDF`
+inv_cdf <- function(x) {return(-log(x))}
+hist(rexp(1000))
+hist(inverseCDF(
+    1000, 
+    inv_cdf
+  )
+)
+# Actual
+genCrossTeamWinningProbabilities(
+ inverseCDF(
+    4, 
+    inv_cdf
+  )
+)
+```
