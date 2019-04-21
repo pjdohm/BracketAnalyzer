@@ -122,7 +122,7 @@ genCrossTeamWinningProbabilities(
 )
 ```
 
-## Normal(4, 10) team powers
+## Normal(10, 0.01) team powers
 Note the probabilities are closer to 0.5 
 ```{r}
 genCrossTeamWinningProbabilities(
