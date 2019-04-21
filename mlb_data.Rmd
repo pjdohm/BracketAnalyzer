@@ -71,9 +71,9 @@ dimnames(alltotal) <- dimnames(winprob) <- list(levels(gl$vteam),levels(gl$vteam
 #total matches between 2 teams
 alltotal[1:10,1:10]
 #avg winnning prob not considering visiting & home
-##For example (ANA,CHA) means the avg probability of ANA winning CHA
+#For example (ANA,CHA) means the avg probability of ANA winning CHA
 #This matrix could be used directly in sim_tournament_initial.R
-winprob[1:10,1:10]
+winprob[1:9,1:9]
 #names of teams 
 levels(gl$vteam)
 ```
