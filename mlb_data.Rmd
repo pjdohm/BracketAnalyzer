@@ -1,0 +1,65 @@
+---
+title: "STAT 428 Final"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+author: "Ziqin Xiong, zxiong8"
+output: pdf_document
+header-includes:
+   - \DeclareMathOperator{\var}{var}
+   - \DeclareMathOperator{\cov}{cov}
+   - \DeclareMathOperator{\E}{E}
+   - \newcommand{\A}{(X^\top X)^{-1}}
+   - \newcommand{\B}{X^\top X}
+   - \newcommand{\hbeta}{\hat\beta}
+   - \newcommand{\h}[1]{\hat{#1}}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+library(knitr)
+opts_chunk$set(tidy.opts=list(width.cutoff=70))
+options(scipen = 1, width = 80, digits = 5)
+```
+
+## 1. Data Generation
+
+```{r}
+setwd('~/courserel/STAT 428/final')
+gl18 <- read.csv("GL2018.TXT",header = F)
+#head(gl18)
+unique(gl18$V4)
+unique(gl18[,c(5,8)])
+nrow(subset(gl18,V5=='AL'&V8=='NL'))
+nrow(subset(gl18,V161!='Y'))
+
+# data files were downloaded from 
+# https://www.retrosheet.org/gamelogs/
+# The information used here was obtained free of
+# charge from and is copyrighted by Retrosheet.  Interested
+# parties may contact Retrosheet at "www.retrosheet.org".
+gl16 <- read.csv("GL2016.TXT",header = F)[,c(4,5,10,7,8,11)]
+gl17 <- read.csv("GL2017.TXT",header = F)[,c(4,5,10,7,8,11)]
+gl18 <- read.csv("GL2018.TXT",header = F)[,c(4,5,10,7,8,11)]
+gl <- rbind(gl16,gl17,gl18)
+colnames(gl) <- c('vteam','vleague','vscore','hteam','hleague','hscore')
+
+win <- lose <- draw <- matrix(0,30,30,dimnames = 
+         list(paste0(levels(gl$vteam),'v'),paste0(levels(gl$vteam),'h')))
+for(i in 1:nrow(gl)){
+  if(gl[i,3]>gl[i,6])
+    win[gl$vteam[i],gl$hteam[i]] = win[gl$vteam[i],gl$hteam[i]]+1
+  else if(gl[i,3]<gl[i,6])
+    lose[gl$vteam[i],gl$hteam[i]] = lose[gl$vteam[i],gl$hteam[i]]+1
+  else
+    draw[gl$vteam[i],gl$hteam[i]] = draw[gl$vteam[i],gl$hteam[i]]+1
+}
+total <- win+lose+draw
+#winning probability of visiting teams, where rows are visiting teams and 
+#cols are home teams.
+#For example (ANAv,CHAh) means the avg probability of ANA winning CHA as a 
+#visiting team. This also means the avg probability of CHA losing or drawing
+#ANA as a home team (P(lose|draw) = 1-P(win))
+#NaN means there's no game records for 2 teams 
+winprob.v <- win/total
+winprob.v[1:5,1:5]
+```
+
