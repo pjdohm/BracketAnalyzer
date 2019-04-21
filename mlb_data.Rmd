@@ -20,16 +20,15 @@ opts_chunk$set(tidy.opts=list(width.cutoff=70))
 options(scipen = 1, width = 80, digits = 5)
 ```
 
-## 1. Data Generation
-
+## 1. MLB game logs cleaning 
 ```{r}
 setwd('~/courserel/STAT 428/final')
-gl18 <- read.csv("GL2018.TXT",header = F)
-#head(gl18)
-unique(gl18$V4)
-unique(gl18[,c(5,8)])
-nrow(subset(gl18,V5=='AL'&V8=='NL'))
-nrow(subset(gl18,V161!='Y'))
+# gl18 <- read.csv("GL2018.TXT",header = F)
+# head(gl18)
+# unique(gl18$V4)
+# unique(gl18[,c(5,8)])
+# nrow(subset(gl18,V5=='AL'&V8=='NL'))
+# nrow(subset(gl18,V161!='Y'))
 
 # data files were downloaded from 
 # https://www.retrosheet.org/gamelogs/
@@ -39,6 +38,7 @@ nrow(subset(gl18,V161!='Y'))
 gl16 <- read.csv("GL2016.TXT",header = F)[,c(4,5,10,7,8,11)]
 gl17 <- read.csv("GL2017.TXT",header = F)[,c(4,5,10,7,8,11)]
 gl18 <- read.csv("GL2018.TXT",header = F)[,c(4,5,10,7,8,11)]
+#simiplified game logs from 2016 to 2018
 gl <- rbind(gl16,gl17,gl18)
 colnames(gl) <- c('vteam','vleague','vscore','hteam','hleague','hscore')
 
@@ -60,6 +60,18 @@ total <- win+lose+draw
 #ANA as a home team (P(lose|draw) = 1-P(win))
 #NaN means there's no game records for 2 teams 
 winprob.v <- win/total
-winprob.v[1:5,1:5]
+winprob.v[1:8,1:8]
+# avg winnning prob not considering visiting & home
+alltotal <- total*upper.tri(total) + t(total)*upper.tri(total)
+allwin <- win*upper.tri(win) + t(lose)*upper.tri(win)
+winprob <- allwin/alltotal
+dimnames(alltotal) <- dimnames(winprob) <- list(levels(gl$vteam),levels(gl$vteam))
+#total matches between 2 teams
+alltotal[1:10,1:10]
+#avg winnning prob not considering visiting & home
+##For example (ANA,CHA) means the avg probability of ANA winning CHA
+winprob[1:10,1:10]
 ```
+
+
 
