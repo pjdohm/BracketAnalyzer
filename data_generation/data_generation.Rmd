@@ -2,8 +2,11 @@
 title: "Data Generation"
 author: "Yuchen Li (li215), section 1UG"
 date: "April 14, 2019"
-output: 
+output:
   pdf_document:
+    toc: yes
+  html_document:
+    df_print: paged
     toc: yes
 ---
 

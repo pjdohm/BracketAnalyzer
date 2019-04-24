@@ -1,16 +1,19 @@
 ---
 title: "STAT 428 Final"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
 author: "Ziqin Xiong, zxiong8"
-output: pdf_document
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
 header-includes:
-   - \DeclareMathOperator{\var}{var}
-   - \DeclareMathOperator{\cov}{cov}
-   - \DeclareMathOperator{\E}{E}
-   - \newcommand{\A}{(X^\top X)^{-1}}
-   - \newcommand{\B}{X^\top X}
-   - \newcommand{\hbeta}{\hat\beta}
-   - \newcommand{\h}[1]{\hat{#1}}
+- \DeclareMathOperator{\var}{var}
+- \DeclareMathOperator{\cov}{cov}
+- \DeclareMathOperator{\E}{E}
+- \newcommand{\A}{(X^\top X)^{-1}}
+- \newcommand{\B}{X^\top X}
+- \newcommand{\hbeta}{\hat\beta}
+- \newcommand{\h}[1]{\hat{#1}}
 ---
 
 ```{r setup, include=FALSE}
@@ -22,7 +25,6 @@ options(scipen = 1, width = 80, digits = 5)
 
 ## 1. MLB game logs cleaning 
 ```{r}
-setwd('~/courserel/STAT 428/final')
 # gl18 <- read.csv("GL2018.TXT",header = F)
 # head(gl18)
 # unique(gl18$V4)
@@ -35,9 +37,9 @@ setwd('~/courserel/STAT 428/final')
 # The information used here was obtained free of
 # charge from and is copyrighted by Retrosheet.  Interested
 # parties may contact Retrosheet at "www.retrosheet.org".
-gl16 <- read.csv("GL2016.TXT",header = F)[,c(4,5,10,7,8,11)]
-gl17 <- read.csv("GL2017.TXT",header = F)[,c(4,5,10,7,8,11)]
-gl18 <- read.csv("GL2018.TXT",header = F)[,c(4,5,10,7,8,11)]
+gl16 <- read.csv("mlb_data/GL2016.TXT",header = F)[,c(4,5,10,7,8,11)]
+gl17 <- read.csv("mlb_data/GL2017.TXT",header = F)[,c(4,5,10,7,8,11)]
+gl18 <- read.csv("mlb_data/GL2018.TXT",header = F)[,c(4,5,10,7,8,11)]
 #simiplified game logs from 2016 to 2018
 gl <- rbind(gl16,gl17,gl18)
 colnames(gl) <- c('vteam','vleague','vscore','hteam','hleague','hscore')
