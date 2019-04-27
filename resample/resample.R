@@ -36,3 +36,23 @@ jack_replicate <- function(x, estimator = mean){
   se_j <- sqrt((n-1)/n)*sqrt(sumsq)
   list(jack = jack,bias = bias_j, se = se_j)
 }
+
+
+############## EXAMPLE ##################
+
+#some sample of team ranks from beta distribution
+q <- as.integer(rbeta(1000,2,5)*10)+1
+#bootstrap on q using mean
+b <- boot_replicate(q,estimator = mean)
+library(stats)
+#empirical distribution of bootstrap
+plot(ecdf(b$boot))
+hist(b$boot, freq = F,50)
+print(c(b$bias,b$se))
+
+#bootstrap on chance of getting 1 (win)
+b <- boot_replicate(q,estimator = function(x) mean(x==1))
+#empirical distribution of bootstrap
+plot(ecdf(b$boot))
+hist(b$boot, freq = F,50)
+print(c(b$bias,b$se))
