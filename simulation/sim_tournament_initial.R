@@ -42,6 +42,11 @@ simRound <- function(bracket, matchups) {
   return(outBracket)
 }
 
+# want to capture number of wins each team has per tournament
+# list with the winning team
+# "winner = team #
+# "num wins" = c(how many wins each team has gotten)
+
 simTournament <- function(bracket, matchups) {
   # function to simulate a tournament given a bracket and probability matrix
   
@@ -56,11 +61,19 @@ simTournament <- function(bracket, matchups) {
   newBracket <- bracket
   nRounds <- log(nTeams, base=2)
   
+  results = c("Winner"=-1,"WinsPerTeam"=list(rep(0, nTeams)))
+  
   for (round in 1:nRounds) {
+    #winsPrev = results["WinsPerTeam"]
+    #print(newBracket)
     newBracket <- simRound(newBracket, matchups)
+    for(i in newBracket){
+      results$WinsPerTeam[i] = results$WinsPerTeam[i]+1
+    }
   }
   
-  return(newBracket)
+  results["Winner"] = newBracket
+  return(results)
 }
 
 
@@ -81,16 +94,10 @@ for (i in 1:n) {
 }
 
 nSim <- 1000 # number of tournaments to simulate
-# simulate prior distribution
-prior <- table(replicate(nSim, simTournament(t, M)))/nSim
 
-round1 <- seq(1, n, by=2) + replicate(n/2, sample(c(0,1), size=1)) # arbitrary first round results
-# simulate posterior
-posterior <- table(replicate(nSim, simTournament(round1, M)))/nSim
+#### GET M AND SEEDING STRUCTURE t FROM OTHER FILES ####
 
-prior
-posterior
-
-par(mfrow=c(1,2))
-hist(prior)
-hist(posterior)
+# t should be bracket structure, and M is probability matrix
+simResults <- replicate(nSim, simTournament(t, M), simplify=FALSE)
+# access results of the simulation as following syntax:
+# simResults[[1]]$WinsPerTeam
