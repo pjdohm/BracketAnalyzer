@@ -118,4 +118,3 @@ matchups <- matrix(runif(nTeams^2), nrow=nTeams)
 newBracket <- simRound(bracket, matchups)
 
 getPriorAndPosterior(bracket, newBracket, matchups)
->>>>>>> 5e4ffb2372f301f6087b5a15d39dc1d070883522
