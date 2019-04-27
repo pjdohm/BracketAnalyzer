@@ -29,7 +29,7 @@ jack_replicate <- function(x, estimator = mean){
   jack <- numeric(n)
   #perform jackknife
   for(i in 1:n)
-    jack[i] <- estimator(x1[-i])
+    jack[i] <- estimator(x[-i])
   #bias using jackknife
   bias_j <- (n-1)*(estimator(jack)-estimator(x))
   sumsq=sum((jack-mean(jack))^2)
