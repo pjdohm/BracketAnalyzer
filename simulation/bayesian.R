@@ -67,8 +67,21 @@ getPriorAndPosteriorExpectedWins <- function(oldBracket, newBracket, matchups, n
     out <- prior
     colnames(out) <- c("teams", "priorExp", "priorSD")
     
+    totTeams <- ncol(matchups)
+    oldTeams <- length(oldBracket)
+    newTeams <- length(newBracket)
+    
+    oldRounds <- log2(totTeams) - log2(oldTeams)
+    newRounds <- log2(totTeams) - log2(newTeams)
+    
+    out$priorExp <- out$priorExp
     out$postExp <- posterior$expWins
     out$postSD <- posterior$sdWins
+    
+    for (team in 1:totTeams) {
+        if (any(newBracket == team)) out$postExp[team] = out$postExp[team] + newRounds
+        if (any(oldBracket == team)) out$priorExp[team] = out$priorExp[team] + oldRounds
+    }
     
     return(out)
 }
