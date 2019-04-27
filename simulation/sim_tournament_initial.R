@@ -59,9 +59,9 @@ simTournament <- function(bracket, matchups) {
   
   nTeams <- length(bracket)
   newBracket <- bracket
-  nRounds <- log(nTeams, base=2)
+  nRounds <- log2(nTeams)
   
-  results = c("Winner"=-1,"WinsPerTeam"=list(rep(0, nTeams)))
+  results = c("Winner"=-1,"WinsPerTeam"=list(rep(0, ncol(matchups))))
   
   for (round in 1:nRounds) {
     #winsPrev = results["WinsPerTeam"]

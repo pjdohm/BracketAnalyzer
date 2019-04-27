@@ -11,7 +11,9 @@
 
 # get win distribution of a bracket (via simulation)
 getWinDistribution <- function(bracket, matchups, nSim=10000) {
-    winners <- replicate(nSim, simTournament(bracket, matchups))
+    simResults <- replicate(nSim, simTournament(bracket, matchups), simplify='array')
+    winners <- numeric(nSim)
+    for(i in 1:nSim) winners[i] = simResults[,i]$Winner
     out <- data.frame(table(winners))
     colnames(out) <- c("teams", "freq")
     out$teams <- as.numeric(out$teams)
@@ -20,7 +22,7 @@ getWinDistribution <- function(bracket, matchups, nSim=10000) {
 
 
 # get prior and posterior win distributions of an old and new bracket
-getPriorAndPosterior <- function(oldBracket, newBracket, matchups, nSim=10000) {
+getPriorAndPosteriorWins <- function(oldBracket, newBracket, matchups, nSim=10000) {
     prior <- getWinDistribution(oldBracket, matchups, nSim)
     posterior <- getWinDistribution(newBracket, matchups, nSim)
     
@@ -43,64 +45,30 @@ getPriorAndPosterior <- function(oldBracket, newBracket, matchups, nSim=10000) {
 }
 
 
-##########
-# TESTING
-##########
-
-
-nTeams <- 8
-bracket <- tournament_seeding(nTeams)
-matchups <- matrix(runif(nTeams^2), nrow=nTeams)
-
-newBracket <- simRound(bracket, matchups)
-
-getPriorAndPosterior(bracket, newBracket, matchups)
-=======
-
-
-
-##########
-# HELPERS
-##########
-
-
-# assume simGame, simRound, and simTournament functions
-# assume seeding functions
-
-
-# get team given seed
-getTeamFromSeed <- function(seed, teams, seeds)
-
-
-# get win distribution of a bracket (via simulation)
-getWinDistribution <- function(bracket, matchups, nSim=10000) {
-    winners <- replicate(nSim, simTournament(bracket, matchups))
-    out <- data.frame(table(winners))
-    colnames(out) <- c("teams", "freq")
+getExpectedWins <- function(bracket, matchups, nSim=10000) {
+    simResults <- replicate(nSim, simTournament(bracket, matchups), simplify='array')
+    
+    winsPerTeam <- c()
+    for(i in 1:nSim) winsPerTeam = rbind(winsPerTeam, simResults[,i]$WinsPerTeam)
+    expWins <- apply(winsPerTeam, MARGIN=2, FUN=mean)
+    sdWins <- apply(winsPerTeam, MARGIN=2, FUN=sd)
+    
+    teams <- 1:ncol(matchups)
+    out <- data.frame(teams, expWins, sdWins)
     out$teams <- as.numeric(out$teams)
     return(out)
 }
 
 
-# get prior and posterior win distributions of an old and new bracket
-getPriorAndPosterior <- function(oldBracket, newBracket, matchups, nSim=10000) {
-    prior <- getWinDistribution(oldBracket, matchups, nSim)
-    posterior <- getWinDistribution(newBracket, matchups, nSim)
+getPriorAndPosteriorExpectedWins <- function(oldBracket, newBracket, matchups, nSim=10000) {
+    prior <- getExpectedWins(oldBracket, matchups, nSim)
+    posterior <- getExpectedWins(newBracket, matchups, nSim)
     
     out <- prior
-    colnames(out) <- c("teams", "priorFreq")
+    colnames(out) <- c("teams", "priorExp", "priorSD")
     
-    nTeams <- length(oldBracket)
-    for (team in 1:nTeams) {
-        if (!(any(newBracket == team))) {
-            tempDF <- data.frame(t(c(team, 0)))
-            colnames(tempDF) <- c("teams", "freq")
-            posterior <- rbind(posterior, tempDF)
-        }
-    }
-    
-    posterior <- posterior[order(posterior$teams),]
-    out$postFreq <- posterior$freq
+    out$postExp <- posterior$expWins
+    out$postSD <- posterior$sdWins
     
     return(out)
 }
@@ -111,10 +79,13 @@ getPriorAndPosterior <- function(oldBracket, newBracket, matchups, nSim=10000) {
 ##########
 
 
-nTeams <- 8
-bracket <- tournament_seeding(nTeams)
-matchups <- matrix(runif(nTeams^2), nrow=nTeams)
+n <- 8
+B <- tournament_seeding(n)
+m <- matrix(runif(n^2), nrow=n)
 
-newBracket <- simRound(bracket, matchups)
+newBracket <- simRound(B, m)
 
-getPriorAndPosterior(bracket, newBracket, matchups)
+getPriorAndPosteriorWins(B, newBracket, m)
+
+getExpectedWins(B, m)
+getExpectedWins(newBracket, m)
