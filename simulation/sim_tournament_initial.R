@@ -65,7 +65,6 @@ simTournament <- function(bracket, matchups) {
   
   for (round in 1:nRounds) {
     #winsPrev = results["WinsPerTeam"]
-    #print(newBracket)
     newBracket <- simRound(newBracket, matchups)
     for(i in newBracket){
       results$WinsPerTeam[i] = results$WinsPerTeam[i]+1
@@ -98,6 +97,18 @@ nSim <- 1000 # number of tournaments to simulate
 #### GET M AND SEEDING STRUCTURE t FROM OTHER FILES ####
 
 # t should be bracket structure, and M is probability matrix
-simResults <- replicate(nSim, simTournament(t, M), simplify=FALSE)
+simResults <- replicate(nSim, simTournament(t, M), simplify="array")
+#simResults
+
+winnerList = c()
+winsPerTeamList = c()
+
+for(i in 1:nSim){
+  winnerList = c(winnerList,simResults[,i]$Winner)
+  winsPerTeamList = rbind(winsPerTeamList,simResults[,i]$WinsPerTeam)
+}
+
+# winnerList
+# winsPerTeamList
 # access results of the simulation as following syntax:
-# simResults[[1]]$WinsPerTeam
+# simResults[,1]$Winner
