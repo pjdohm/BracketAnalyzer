@@ -1,0 +1,58 @@
+---
+title: "STAT 428 Group Written Report"
+date: "Due May 3, 2019"
+output:
+  html_document:
+    theme: readable
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(fig.pos = '!h')
+```
+
+*Title:* Tournament Bracket Simulation and Analysis  
+*Group Number:* 3  
+*Members:* Eric Auster (eauste2), Philip Dohm (pdohm2), Yuchen Li (li215), Ziqin Xiong (zxiong8), Jeffrey Chao (jschao2)  
+*Leader:* Eric Auster   
+
+-----
+
+## Abstract
+
+
+
+-----
+
+## Introduction
+
+
+
+-----
+
+## Methods
+
+
+
+-----
+
+## Results
+
+
+
+-----
+
+## Discussion
+
+
+
+-----
+
+## Appendix
+
+
+
+-----
