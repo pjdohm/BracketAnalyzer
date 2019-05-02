@@ -2,10 +2,10 @@
 title: "Results_Resample"
 date: "Due May 3, 2019"
 output:
-  pdf_document:
-    toc: yes
   html_document:
     theme: readable
+    toc: yes
+  pdf_document:
     toc: yes
 ---
 
