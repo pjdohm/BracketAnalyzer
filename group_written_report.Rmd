@@ -19,6 +19,475 @@ knitr::opts_chunk$set(fig.pos = '!h')
 *Members:* Eric Auster (eauste2), Philip Dohm (pdohm2), Yuchen Li (li215), Ziqin Xiong (zxiong8), Jeffrey Chao (jschao2)  
 *Leader:* Eric Auster   
 
+```{r, echo=F}
+# need to call funtions in document
+
+#' Generates team powers based on the normal distribution.
+#' @author Yuchen Li
+#'
+#' @param n is the number of teams.
+#' @param mean is the mean of the normal distribution.
+#' @param sd is the standard deviation of the normal distribution.
+#'
+#' @return a vector of team powers, sorted in decreasing order.
+#'
+genNormalPowers <- function(n, mean=0, sd=1) {
+    powers <- rnorm(n, mean, sd)
+    return(sort(abs(powers), decreasing=TRUE))
+}
+
+#' Performs the Accept-Reject method.
+#' @author Yuchen Li
+#' @references Yuchen Li (li215), HW2, Exercise 4
+#'
+#' @param nsim is the number of simulations.
+#' @param f is the target distribution.
+#' @param min is the minimum value in the domain of f.
+#' @param max is the maximum value in the domain of f.
+#' @param M >= sup{f(x)}
+#' 
+#' @return a vector of random variates sampled from f using the
+#' Accept-Reject method with Unif(min, max) as the reference distribution.
+#'
+acceptReject <- function(nsim, f, min, max, M) {
+    k1 = 0             # counter for accepted samples
+    j1 = 0             # number of iterations required to get desired sample size
+    y1 = numeric(nsim) # storing the sample
+    while(k1 < nsim){
+        u = runif(1)
+        x = runif(1, min, max)  # random variate from reference distribution
+        g1 = 1
+        if (u < f(x) / M / g1) {
+            # condition of accepting x in our sample
+            k1 = k1 + 1
+            y1[k1] = x
+        }
+        j1 = j1 + 1
+    }
+    return(sort(y1, decreasing=TRUE))
+}
+
+#' Performs the Inverse CDF method.
+#' @author Yuchen Li
+#' 
+#' @param n is the number of simulations.
+#' @param inv_cdf is the inverse CDF function for f.
+#' 
+#' @return a vector of random variates sampled from PDF f using the
+#' Inverse CDF method.
+#' 
+inverseCDF <- function(n, inv_cdf) {
+    u = runif(n)
+    y = numeric(n)
+    for (i in 1:n) {
+        y[i] = inv_cdf(u[i])
+    }
+    return(sort(y, decreasing=TRUE))
+}
+
+#' Generates cross team winning probabilities.
+#' @author Yuchen Li
+#' 
+#' @param powers is the team powers.
+#' 
+#' @return an n x n matrix M where M_{ij} is the probability of team-i beating team-j
+genCrossTeamWinningProbabilities <- function(powers) {
+    n = length(powers)
+    probs = matrix(nrow=n, ncol=n)
+    for (i in 1:n) {
+        for (j in 1:n) {
+            probs[i,j] = powers[i] / (powers[i] + powers[j])
+        }
+    }
+    return(probs)
+}
+
+#' Creates a traditional tournament style seeding arrangement. 
+#' @author Eric Auster
+#'
+#' @param size is the number of seeds to generate. This needs
+#' to be a power of two.
+#'
+#' @return a vector containing the seeds.
+#'
+tournament_seeding = function(size) {
+    
+    #' Generates the next round of seeding based off the passed in round.
+    #'
+    #' @param seeds is the previous round of seeding to generate for.
+    #'
+    nextRound = function(seeds) {
+        
+        # Next round has twice the size
+        nextSize = length(seeds) * 2
+        out = numeric(nextSize)
+        idx = 1
+        
+        # Make sure to match up best seed with worst
+        for (seed in seeds) {
+            out[idx] = seed
+            out[idx + 1] = (nextSize + 1) - seed
+            idx = idx + 2
+        }
+        
+        return(out)
+    }
+    
+    # Stop if not a power of two
+    if (sum(as.numeric(intToBits(size))) != 1) {
+        stop("Size must be a power of two")
+    }
+    
+    # Special case when size is 2
+    if (size == 2) {
+        return(c(1, 2))
+    }
+    
+    # Calculate number of rounds
+    rounds = log2(size) - 1
+    
+    # Start with first two seeds
+    seeds = c(1, 2)
+    
+    # Iteratively generate next seeds
+    for (i in 1:rounds) {
+        seeds = nextRound(seeds)
+    }
+    
+    return(seeds)
+}
+
+#' Creates a seeding arrangement that is left skewed.
+#' @author Eric Auster
+#'
+#' @param size is the number of seeds to generate. This needs
+#' to be a power of two.
+#'
+#' @return a vector containing the seeds.
+#'
+left_skewed_seeding = function(size) {
+    
+    # Stop if not a power of two
+    if (sum(as.numeric(intToBits(size))) != 1) {
+        stop("Size must be a power of two")
+    }
+    
+    # Special case when size is 2
+    if (size == 2) {
+        return(c(1, 2))
+    }
+    
+    # Create seeds and left/right branches
+    seeds = 1:size
+    left_seeds = numeric(size / 2)
+    right_seeds = numeric(size / 2)
+    
+    # Indexes for the left/right branches
+    left_idx = 1
+    right_idx = 1
+    
+    # Keep track of which branch will get the next seed
+    left_turn = TRUE
+    
+    # For each iteration add the first and last seed to the
+    # current branch
+    for (i in 1:(size / 2)) {
+        if (left_turn) {
+            left_seeds[left_idx] = seeds[i]
+            left_seeds[left_idx + 1] = seeds[(size + 1) - i]
+            left_idx = left_idx + 2
+            left_turn = FALSE
+        } else {
+            right_seeds[right_idx] = seeds[i]
+            right_seeds[right_idx + 1] = seeds[(size + 1) - i]
+            right_idx = right_idx + 2
+            left_turn = TRUE
+        }
+    }
+    
+    # Combine branches
+    c(left_seeds, right_seeds)
+}
+
+#' Creates a random seeding arrangement.
+#' @author Eric Auster
+#'
+#' @param size is the number of seeds to generate. This needs
+#' to be a power of two.
+#'
+#' @return a vector containing the seeds.
+#'
+random_seeding = function(size) {
+    # Stop if not a power of two
+    if (sum(as.numeric(intToBits(size))) != 1) {
+        stop("Size must be a power of two")
+    }
+    
+    return(sample(1:size, size))
+}
+
+#' Simulates a single game between two teams.
+#' @author Jeffrey Chao, Philip Dohm
+#' 
+#' @param teams vector containing the two teams to face-off.
+#' @param matchups probability matrix.
+#' 
+#' @return winner of the game.
+#' 
+simGame <- function(teams, matchups) {
+    team1 <- teams[1]
+    team2 <- teams[2]
+    matchup <- matchups[team1, team2]
+    
+    if (runif(1) < matchup) {
+        return(team1)
+    } else {
+        return(team2)
+    }
+}
+
+#' Simulates an entire round of a tournament.
+#' @author Jeffrey Chao, Philip Dohm
+#' 
+#' @param bracket is the bracket structure.
+#' @param matchups is the probability matrix.
+#' 
+#' @return vector containing the winners of the round.
+#' 
+simRound <- function(bracket, matchups) {
+    nGames <- length(bracket)/2
+    outBracket <- c()
+    for (game in 1:nGames) {
+        teams <- bracket[(2*game - 1):(2*game)]
+        winner <- simGame(teams, matchups)
+        outBracket <- c(outBracket, winner)
+    }
+    
+    return(outBracket)
+}
+
+#' Simulates an entire tournament given a bracket and probability matrix.
+#' @author Jeffrey Chao, Philip Dohm
+#' 
+#' @param bracket is the bracket structure.
+#' @param matchups is the probability matrix.
+#' 
+#' @return list containing the tournment winner and vector that stores
+#' how many wins each team has gotten.
+#' 
+simTournament <- function(bracket, matchups) {
+    nTeams <- length(bracket)
+    newBracket <- bracket
+    nRounds <- log2(nTeams)
+    
+    results = c("Winner"=-1,"WinsPerTeam"=list(rep(0, ncol(matchups))))
+    
+    for (round in 1:nRounds) {
+        #winsPrev = results["WinsPerTeam"]
+        newBracket <- simRound(newBracket, matchups)
+        for(i in newBracket){
+            results$WinsPerTeam[i] = results$WinsPerTeam[i]+1
+        }
+    }
+    
+    results["Winner"] = newBracket
+    return(results)
+}
+
+#' Gets the win distribution for teams after a number of simulations.
+#' @author Philip Dohm
+#' 
+#' @param bracket is the tournament bracket structure.
+#' @param matchups is the probability matrix.
+#' @param nSim is the number of simulations.
+#' 
+#' @return is table containing the win distribution for each team.
+#' 
+getWinDistribution <- function(bracket, matchups, nSim=10000) {
+    simResults <- replicate(nSim, simTournament(bracket, matchups), simplify='array')
+    winners <- numeric(nSim)
+    for(i in 1:nSim) winners[i] = simResults[,i]$Winner
+    out <- data.frame(table(winners))
+    colnames(out) <- c("teams", "freq")
+    out$teams <- as.numeric(out$teams)
+    return(out)
+}
+
+#' Gets the prior and posterior win distributions of an old and new bracket.
+#' @author Philip Dohm
+#' 
+#' @param oldBracket is the prior bracket to generate win distribution from.
+#' @param newBracket is the posterior bracket to generate win distribution from.
+#' @param matchups is the probability matrix.
+#' @param nSim is the number of simulations.
+#' 
+#' @return table containing the prior and posterior win distributions.
+#' 
+getPriorAndPosteriorWins <- function(oldBracket, newBracket, matchups, nSim=10000) {
+    prior <- getWinDistribution(oldBracket, matchups, nSim)
+    posterior <- getWinDistribution(newBracket, matchups, nSim)
+    
+    out <- prior
+    colnames(out) <- c("teams", "priorFreq")
+    
+    nTeams <- length(oldBracket)
+    for (team in 1:nTeams) {
+        if (!(any(newBracket == team))) {
+            tempDF <- data.frame(t(c(team, 0)))
+            colnames(tempDF) <- c("teams", "freq")
+            posterior <- rbind(posterior, tempDF)
+        }
+    }
+    
+    posterior <- posterior[order(posterior$teams),]
+    out$postFreq <- posterior$freq
+    
+    return(out)
+}
+
+#' Gets the expected number of wins for each team in a given bracket.
+#' @author Philip Dohm
+#' 
+#' @param bracket is the bracket structure.
+#' @param matchups is the probability matrix.
+#' @param nSim is the number of simulations.
+#' 
+#' @return table containing the expected number of wins for each team
+#' and standard distribution.
+#' 
+getExpectedWins <- function(bracket, matchups, nSim=10000) {
+    simResults <- replicate(nSim, simTournament(bracket, matchups), simplify='array')
+    
+    winsPerTeam <- c()
+    for(i in 1:nSim) winsPerTeam = rbind(winsPerTeam, simResults[,i]$WinsPerTeam)
+    expWins <- apply(winsPerTeam, MARGIN=2, FUN=mean)
+    sdWins <- apply(winsPerTeam, MARGIN=2, FUN=sd)
+    
+    teams <- 1:ncol(matchups)
+    out <- data.frame(teams, expWins, sdWins)
+    out$teams <- as.numeric(out$teams)
+    return(out)
+}
+
+#' Gets the prior and posterior expected wins of an old and new bracket.
+#' @author Philip Dohm
+#' 
+#' @param oldBracket is the prior bracket to generate expected wins from.
+#' @param newBracket is the posterior bracket to generate expected wins from.
+#' @param matchups is the probability matrix.
+#' @param nSim is the number of simulations.
+#' 
+#' @return table containing the prior and posterior expected wins.
+#' 
+getPriorAndPosteriorExpectedWins <- function(oldBracket, newBracket, matchups, nSim=10000) {
+    prior <- getExpectedWins(oldBracket, matchups, nSim)
+    posterior <- getExpectedWins(newBracket, matchups, nSim)
+    
+    out <- prior
+    colnames(out) <- c("teams", "priorExp", "priorSD")
+    
+    totTeams <- ncol(matchups)
+    oldTeams <- length(oldBracket)
+    newTeams <- length(newBracket)
+    
+    oldRounds <- log2(totTeams) - log2(oldTeams)
+    newRounds <- log2(totTeams) - log2(newTeams)
+    
+    out$priorExp <- out$priorExp
+    out$postExp <- posterior$expWins
+    out$postSD <- posterior$sdWins
+    
+    for (team in 1:totTeams) {
+        if (any(newBracket == team)) out$postExp[team] = out$postExp[team] + newRounds
+        if (any(oldBracket == team)) out$priorExp[team] = out$priorExp[team] + oldRounds
+    }
+    
+    return(out)
+}
+
+#' Gets the prior and posterior number of wins (and probabilities) for every team.
+#' @author Philip Dohm
+#'
+#' @param oldBracket is the prior bracket to generate expected wins from.
+#' @param newBracket is the posterior bracket to generate expected wins from.
+#' @param matchups is the probability matrix.
+#' @param nSim is the number of simulations.
+#' 
+#' @return list of data frame containing number of wins and prior and posterior frequencies
+#'          and probabilities.
+#' 
+bayesianTeam <- function(oldBracket, newBracket, matchups, nSim=10000) {
+    nTeams <- ncol(matchups)
+    diffRounds <- log2(length(oldBracket) / length(newBracket))
+    nGames <- log2(nTeams)
+    priorWPT <- postWPT <- matrix(0, nrow=nTeams, ncol=nSim)
+    for (i in 1:nSim) {
+        priorWPT[,i] <- simTournament(oldBracket, matchups)$WinsPerTeam
+        postWPT[,i] <- simTournament(newBracket, matchups)$WinsPerTeam
+        for (team in oldBracket) {
+            if (any(newBracket == team)) {
+                postWPT[team, i] <- postWPT[team, i] + diffRounds
+            }
+        }
+    }
+    
+    out <- list()
+    for (team in 1:nTeams) {
+        ap <- matrix(0, nrow=nGames+1, ncol=3)
+        ap <- as.data.frame(ap)
+        colnames(ap) <- c("wins", "priorFreq", "postFreq")
+        ap$wins <- 0:nGames
+        for (win in 0:nGames) {
+            ap[win+1, 2] <- length(which(priorWPT[team,] == win))
+            ap[win+1, 3] <- length(which(postWPT[team,] == win))
+        }
+        ap$priorProb <- ap$priorFreq / nSim
+        ap$postProb <- ap$postFreq / nSim
+        out[[team]] <- ap
+    }
+    
+    return(out)
+}
+
+#' Generates bootstrap replicates.
+#' @author Ziqin Xiong
+#' 
+#' @param x is a vector of team ranking or other measure of team power in different simulations.
+#' @param B is number of replicates to generate.
+#' @param estimator is the statistic we want, set as mean by default.
+#' @param l is the length of bootstrap resample in each run.
+#' 
+#' @return list of bootstrap replicates, bias and standard error.
+#' 
+boot_replicate <- function(x, B = 5000, estimator = mean, l = length(x)){
+    boots <- replicate(B, estimator(sample(x,l,replace=TRUE)))
+    sd_b <- sd(boots)
+    bias_b <- mean(boots - estimator(x))
+    list(boot = boots, bias = bias_b, se = sd_b)
+}
+
+#' Generate jackknife replicates.
+#' @author Ziqin Xiong
+#' 
+#' @param x is vector of team ranking or other measure of team power in different simulations.
+#' @param estimator is the statistic we want, set as mean by default.
+#' 
+#' @return list of jackknife replicates, bias and standard error.
+#' 
+jack_replicate <- function(x, estimator = mean){
+    n <- length(x)
+    jack <- numeric(n)
+    #perform jackknife
+    for(i in 1:n)
+        jack[i] <- estimator(x[-i])
+    #bias using jackknife
+    bias_j <- (n-1)*(mean(jack)-estimator(x))
+    sumsq=sum((jack-mean(jack))^2)
+    se_j <- sqrt((n-1)/n)*sqrt(sumsq)
+    list(jack = jack,bias = bias_j, se = se_j)
+}
+```
+
 -----
 
 ## Abstract
@@ -56,10 +525,47 @@ include_graphics("Figure 2.png")
 The algorithm for simulating a single bracketed tournament can be seen in the appendix under [Simulation Functions], and works roughly as follows:  
 
 1. Take in a tournament bracket in the form of a vector of teams, and a square probability matrix $M$ where $M_{ij}$ is the probability of team $i$ beating team $j$.  
-2. Simulate each individual game in round 1, returning a new bracket that represents the teams going into round 2.  Then simulate round 2, returning a new bracket that represents teams going into round 3, and so on, for $log_2(n)$ rounds where $n$ is the number of teams.  
+2. Simulate each individual game in round 1, returning a new bracket that represents the teams going into round 2.  Then simulate round 2, returning a new bracket that represents teams going into round 3, and so on, for $\log_2(n)$ rounds where $n$ is the number of teams.  
 3. Return the winner of the tournament and a vector of integers representing the number of wins each team had.  
 
 We then get our Monte Carlo simulation results in the form of a 2-D array by using `replicate` on our tournament simulation function.  
+
+
+
+### Bayesian Analysis
+
+The motivation for performing Bayesian analysis on brackets is to see how certain results change the distribution of wins for each team. Before any games are played, we can simulate a tournament and estimate prior win distribution for each team. The prior win distribution is just the probability that a team wins a certain number of games. Notice that in a bracket with 16 teams, if a team wins 4 games, they also win the tournament. After some games are played, perhaps an entire round or even a partial round, we can run another simulation and estimate the posterior win distribution for each team. This will allow us to see how much certain early tournament results impact the overall performance of all teams, and ultimately who wins the tournament.
+
+For an example, if the lowest seed team upsets the highest seed team (like UMBC vs. Virginia in March Madness 2018), there may be a significant impact on the rest of the bracket. One possible impact is that the team(s) who would play the top seed in the following round have much better expected performance, because their second round opponent is a weaker team. However, we would not expect this result to impact teams on the other side of the bracket (e.g. the 2 or 3 seed teams) as much as the teams that are "closer" to playing the top seed.
+
+In order to simulate a prior and posterior distribution, we perform a Monte Carlo tournament simulation on the initial bracket, and the updated bracket. See the Tournament Simulation section for more information on this. For consistency, we use the same bracket structure (seeding) and matchup matrix (generated from Normal powers) for all simulations. We perform many of these simulations and keep track of the number of wins each team had in each simulation. After a sufficient number of replications, we can estimate how likely each team is to win a certain number of games under both the initial bracket and the updated bracket. We obtain a data frame for each team that looks similar to this:
+
+```{r, echo=F}
+n <- 16 # number of teams
+nRounds <- log2(n)
+set.seed(1) # for consistency
+M <- genCrossTeamWinningProbabilities(genNormalPowers(n)) # matchups
+t <- tournament_seeding(n) # tournament seeding
+tFav <- t[which(t <= n/2)]
+bFav <- bayesianTeam(t, tFav, M)
+bFav[[1]]
+```
+
+Note: we have one of these data frames for every team in the tournament. We can use this information to plot prior and posterior distributions for each team, and analyze the differences. Additionally, we can obtain approximations of each teams expected number of wins and the standard error of that estimate; however, we are more interested in the distributions since they provide more insight into a team's difference in performance. Our distributions look similar to the following, where the dashed line represents the prior distribution and the solid line represents the posterior distribution.
+
+```{r, echo=F}
+df <- bFav[[1]]
+titles <- paste("Prior vs. Posterior for Team", 1:16)
+plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
+     xlab="Wins", ylab="Probability", main=titles[1])
+lines(priorProb~wins, data=df, lty=2)
+```
+
+We are interested in analyzing the differences in the prior and posterior distributions given a number of different early round outcomes. Specifically, we will investigate the cases where:
+
+1. The favorite (or higher seeded team) wins in the first round
+2. The underdog (or lower seeded team) wins in the first round
+3. One of the top seeds (1-4) is upset by the lower seeded team (13-16), and all other games remain the same.
 
 -----
 
@@ -67,11 +573,187 @@ We then get our Monte Carlo simulation results in the form of a 2-D array by usi
 
 
 
+### Bayesian Results
+
+We are interested in analyzing the differences in the prior and posterior distributions of the number of wins of each team. We will investigate how different results in early rounds affect an entire bracket. For these simulations, we will be using the same matchup matrix (generated from Normal powers) and the tournament seeding structure for 16 teams. Theoretically, you could apply these techniques to any bracket, but keeping this strucutre allows us to observe more concrete differences. The different results we will investigate are:
+
+1. The favorite (or higher seeded team) wins in the first round
+2. The underdog (or lower seeded team) wins in the first round
+3. One of the top seeds (1-4) is upset by the lower seeded team (13-16), and all other games remain the same.
+
+#### 1. The favorite team wins in the first round
+
+We will plot the win distributions for all of the favorite teams (seeds 1-8), given that they win in the first round. The solid line indicates the posterior win distribution, while the dashed line indicates the prior win distribution.
+
+```{r, echo=F}
+# setup
+n <- 16 # number of teams
+nRounds <- log2(n)
+set.seed(1) # for consistency
+M <- genCrossTeamWinningProbabilities(genNormalPowers(n)) # matchups
+t <- tournament_seeding(n) # tournament seeding
+```
+
+```{r, echo=F}
+# what if favorite wins every game
+tFav <- t[which(t <= n/2)]
+bFav <- bayesianTeam(t, tFav, M)
+titles <- paste("Prior vs. Posterior for Team", 1:16)
+par(mfrow=c(2,2))
+for (i in 1:8) {
+    df <- bFav[[i]]
+    plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
+         xlab="Wins", ylab="Probability", main=titles[i])
+    lines(priorProb~wins, data=df, lty=2)
+}
+```
+
+#### 2. The underdog teams win in the first round
+
+We will plot the win distributions for all of the underdog teams (seeds 9-16), given that they win in the first round. The solid line indicates the posterior win distribution, while the dashed line indicates the prior win distribution.
+
+```{r, echo=F}
+# what if underdog wins every game
+tUD <- t[which(t > n/2)]
+bUpset <- bayesianTeam(t, tUD, M)
+titles <- paste("Prior vs. Posterior for Team", 1:16)
+par(mfrow=c(2,2))
+for (i in 9:16) {
+    df <- bUpset[[i]]
+    plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
+         xlab="Wins", ylab="Probability", main=titles[i])
+    lines(priorProb~wins, data=df, lty=2)
+}
+```
+
+#### 3. A high seed is upset in the first round
+
+We will plot the win distributions for all teams, given an upset in the first round. We only consider teams 1-4 being upset by teams 13-16, respectively, because those matchups have the largest disparity in win percentage. We are interested how a high seed losing early affects the other teams.
+
+##### The 1 seed is upset by the 16 seed
+
+We will plot the win distributions for all teams, given that the 16 seed beats the 1 seed in the first round. The solid line indicates the posterior win distribution, while the dashed line indicates the prior win distribution.
+
+```{r, echo=F}
+# what if 1 seed is upset
+t1L <- t
+t1L[1] <- 16
+b1L <- bayesianTeam(t, t1L, M)
+titles <- paste("Prior vs. Posterior for Team", 1:16)
+par(mfrow=c(2,2))
+for (i in 1:16) {
+    df <- b1L[[i]]
+    plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
+         xlab="Wins", ylab="Probability", main=titles[i])
+    lines(priorProb~wins, data=df, lty=2)
+}
+```
+
+##### The 2 seed is upset by the 15 seed
+
+We will plot the win distributions for all teams, given that the 15 seed beats the 2 seed in the first round. The solid line indicates the posterior win distribution, while the dashed line indicates the prior win distribution.
+
+```{r, echo=F}
+# what if 2 seed is upset
+t2L <- t
+t2L[9] <- 15
+b2L <- bayesianTeam(t, t2L, M)
+titles <- paste("Prior vs. Posterior for Team", 1:16)
+par(mfrow=c(2,2))
+for (i in 1:16) {
+    df <- b2L[[i]]
+    plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
+         xlab="Wins", ylab="Probability", main=titles[i])
+    lines(priorProb~wins, data=df, lty=2)
+}
+```
+
+##### The 3 seed is upset by the 14 seed
+
+We will plot the win distributions for all teams, given that the 14 seed beats the 3 seed in the first round. The solid line indicates the posterior win distribution, while the dashed line indicates the prior win distribution.
+
+```{r, echo=F}
+# what if 3 seed is upset
+t3L <- t
+t3L[13] <- 14
+b3L <- bayesianTeam(t, t3L, M)
+titles <- paste("Prior vs. Posterior for Team", 1:16)
+par(mfrow=c(2,2))
+for (i in 1:16) {
+    df <- b3L[[i]]
+    plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
+         xlab="Wins", ylab="Probability", main=titles[i])
+    lines(priorProb~wins, data=df, lty=2)
+}
+```
+
+##### The 4 seed is upset by the 13 seed
+
+We will plot the win distributions for all teams, given that the 13 seed beats the 4 seed in the first round. The solid line indicates the posterior win distribution, while the dashed line indicates the prior win distribution.
+
+```{r, echo=F}
+# what if 4 seed is upset
+t4L <- t
+t4L[5] <- 13
+b4L <- bayesianTeam(t, t4L, M)
+titles <- paste("Prior vs. Posterior for Team", 1:16)
+par(mfrow=c(2,2))
+for (i in 1:16) {
+    df <- b4L[[i]]
+    plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
+         xlab="Wins", ylab="Probability", main=titles[i])
+    lines(priorProb~wins, data=df, lty=2)
+}
+```
+
 -----
 
 ## Discussion
 
 
+
+### Bayesian Discussion
+
+This section is divided into subsections discussing the results of each of the following three cases:
+
+1. The favorite (or higher seeded team) wins in the first round
+2. The underdog (or lower seeded team) wins in the first round
+3. One of the top seeds (1-4) is upset by the lower seeded team (13-16), and all other games remain the same.
+
+#### 1. The favorite team wins in the first round
+
+We are interested in seeing the impact of the favorite/high seed team winning in the first round. For this case, we only examine plots of the prior and posterior distributions for the top 8 seeded teams (since the others all lose in the first round for the posterior). Notice that all of the posterior distributions displayed have probability 0 at 0 wins because the team already won in the first round.
+
+Notice that for the higher seeded teams (i.e. seeds 1-4), the prior and posterior distributions are nearly identical, especially for Team 1 and 2. This is because these teams are large favorites in their first round matchups (i.e. they win the vast majority of the time). Because of this, a win in the first round hardly impacts their win distribution.
+
+On the other hand, lower seeded teams (i.e. 5-8) have very different prior and posterior distributions. This is because their first round matchup is not heavily favored one way or the other (i.e. they are only slight favorites). This also causes their performance in (potetially) later rounds to be slightly better, although the posterior distributions converge to the prior as wins increase. This is because Teams 5-8 eventually meet Teams 1-4 and are underdogs in those matchups.
+
+#### 2. The underdog teams win in the first round
+
+We are interested in seeing the impact of the underdog/low seed team winning in the first round. For this case, we only examine plots of the prior and posterior distributions for the bottom 8 seeded teams (since the others all lose in the first round for the posterior). Notice that all of the posterior distributions displayed have probability 0 at 0 wins because the team already won in the first round.
+
+We can see that all the posterior distributions vary greatly from the prior. This is because each team won in the first round, which they are not (typically) expected to do; consequently, they are more likely to see success later in the bracket.
+
+For the lowest seeded teams (i.e. 13-16), the posterior distribution tends to convege to the prior distribution as wins increase. Although they won in the first round, these teams are still at a significant disadvantage against the 9-12 seeds, so they are not expected to see as much success later in the tournament.
+
+On the other hand, the higher seeded teams (i.e. 9-12) see much more success later in the tournament. This is because they are favorites in most matchups when the top seeds (i.e. 1-8) are defeated. Effectively, Team 9 is the new 1 seed, and their posterior win distribution reflects this.
+
+#### 3. A high seed is upset in the first round
+
+Although it is interesting to analyze the case where all of the top seeds are upset in the first round, we are also interested in investigating the impact of one upset on the entire tournament. We looked at four cases in particular
+
+- The 1 seed is upset by the 16 seed
+- The 2 seed is upset by the 15 seed
+- The 3 seed is upset by the 14 seed
+- The 4 seed is upset by the 13 seed.
+
+All of these cases have a similar impact on the overall performance of other teams. In general, the largest impact is on the teams in the matchup with the upset (e.g. 1 and 16, 2 and 4, etc.). This makes sense, because from a probabilistic standpoint, this result highly unlikely.
+
+Moving forward in the bracket, the impact is larger on "local" teams than "nonlocal" teams. That is, teams who would meet the underdog team sooner see a larger change in performace. For example, when the 1 seed is upset by the 16 seed, there is more of an impact on Teams 8 and 9 than on Teams 2 and 3. This is because the local teams have an easier opponent in the next round, and this trend continues throughout the bracket; however, the trend becomes weaker as the tournament progresses because the stronger team is likely to move on.
+
+In some cases (e.g. Team 13 when Team 3 is upset by Team 14), there is almost no difference in the prior and posterior distribtuions. This is because these teams are unlikely to progress far enough in the tournament to take advantage of a higher seed missing.
+
+Overall, we can say that the impact of an upset is highest on the prior and posterior distributions of a team is largest for the teams in the upset matchup, then for local teams who would play in the next round or two, and lowest for teams on the "other side" of the bracket (i.e. they would not meet until the final round).
 
 -----
 
@@ -293,7 +975,7 @@ random_seeding = function(size) {
 
 ```{r}
 #' Simulates a single game between two teams.
-#' @author Jeffrey Chao, Phillip Dohm
+#' @author Jeffrey Chao, Philip Dohm
 #' 
 #' @param teams vector containing the two teams to face-off.
 #' @param matchups probability matrix.
@@ -313,7 +995,7 @@ simGame <- function(teams, matchups) {
 }
 
 #' Simulates an entire round of a tournament.
-#' @author Jeffrey Chao, Phillip Dohm
+#' @author Jeffrey Chao, Philip Dohm
 #' 
 #' @param bracket is the bracket structure.
 #' @param matchups is the probability matrix.
@@ -333,7 +1015,7 @@ simRound <- function(bracket, matchups) {
 }
 
 #' Simulates an entire tournament given a bracket and probability matrix.
-#' @author Jeffrey Chao, Phillip Dohm
+#' @author Jeffrey Chao, Philip Dohm
 #' 
 #' @param bracket is the bracket structure.
 #' @param matchups is the probability matrix.
@@ -365,7 +1047,7 @@ simTournament <- function(bracket, matchups) {
 
 ```{r}
 #' Gets the win distribution for teams after a number of simulations.
-#' @author Phillip Dohm
+#' @author Philip Dohm
 #' 
 #' @param bracket is the tournament bracket structure.
 #' @param matchups is the probability matrix.
@@ -384,7 +1066,7 @@ getWinDistribution <- function(bracket, matchups, nSim=10000) {
 }
 
 #' Gets the prior and posterior win distributions of an old and new bracket.
-#' @author Phillip Dohm
+#' @author Philip Dohm
 #' 
 #' @param oldBracket is the prior bracket to generate win distribution from.
 #' @param newBracket is the posterior bracket to generate win distribution from.
@@ -416,7 +1098,7 @@ getPriorAndPosteriorWins <- function(oldBracket, newBracket, matchups, nSim=1000
 }
 
 #' Gets the expected number of wins for each team in a given bracket.
-#' @author Phillip Dohm
+#' @author Philip Dohm
 #' 
 #' @param bracket is the bracket structure.
 #' @param matchups is the probability matrix.
@@ -440,7 +1122,7 @@ getExpectedWins <- function(bracket, matchups, nSim=10000) {
 }
 
 #' Gets the prior and posterior expected wins of an old and new bracket.
-#' @author Phillip Dohm
+#' @author Philip Dohm
 #' 
 #' @param oldBracket is the prior bracket to generate expected wins from.
 #' @param newBracket is the posterior bracket to generate expected wins from.
@@ -473,6 +1155,137 @@ getPriorAndPosteriorExpectedWins <- function(oldBracket, newBracket, matchups, n
     }
     
     return(out)
+}
+
+#' Gets the prior and posterior number of wins (and probabilities) for every team.
+#' @author Philip Dohm
+#'
+#' @param oldBracket is the prior bracket to generate expected wins from.
+#' @param newBracket is the posterior bracket to generate expected wins from.
+#' @param matchups is the probability matrix.
+#' @param nSim is the number of simulations.
+#' 
+#' @return list of data frame containing number of wins and prior and posterior frequencies
+#'          and probabilities.
+#' 
+bayesianTeam <- function(oldBracket, newBracket, matchups, nSim=10000) {
+    nTeams <- ncol(matchups)
+    diffRounds <- log2(length(oldBracket) / length(newBracket))
+    nGames <- log2(nTeams)
+    priorWPT <- postWPT <- matrix(0, nrow=nTeams, ncol=nSim)
+    for (i in 1:nSim) {
+        priorWPT[,i] <- simTournament(oldBracket, matchups)$WinsPerTeam
+        postWPT[,i] <- simTournament(newBracket, matchups)$WinsPerTeam
+        for (team in oldBracket) {
+            if (any(newBracket == team)) {
+                postWPT[team, i] <- postWPT[team, i] + diffRounds
+            }
+        }
+    }
+    
+    out <- list()
+    for (team in 1:nTeams) {
+        ap <- matrix(0, nrow=nGames+1, ncol=3)
+        ap <- as.data.frame(ap)
+        colnames(ap) <- c("wins", "priorFreq", "postFreq")
+        ap$wins <- 0:nGames
+        for (win in 0:nGames) {
+            ap[win+1, 2] <- length(which(priorWPT[team,] == win))
+            ap[win+1, 3] <- length(which(postWPT[team,] == win))
+        }
+        ap$priorProb <- ap$priorFreq / nSim
+        ap$postProb <- ap$postFreq / nSim
+        out[[team]] <- ap
+    }
+    
+    return(out)
+}
+```
+
+### Bayesian Analysis
+
+```{r, eval=F}
+# setup
+n <- 16 # number of teams
+nRounds <- log2(n)
+set.seed(1) # for consistency
+M <- genCrossTeamWinningProbabilities(genNormalPowers(n)) # matchups
+t <- tournament_seeding(n) # tournament seeding
+
+# what if favorite wins every game
+tFav <- t[which(t <= n/2)]
+bFav <- bayesianTeam(t, tFav, M)
+titles <- paste("Prior vs. Posterior for Team", 1:16)
+par(mfrow=c(2,2))
+for (i in 1:8) {
+    df <- bFav[[i]]
+    plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
+         xlab="Wins", ylab="Probability", main=titles[i])
+    lines(priorProb~wins, data=df, lty=2)
+}
+
+# what if underdog wins every game
+tUD <- t[which(t > n/2)]
+bUpset <- bayesianTeam(t, tUD, M)
+titles <- paste("Prior vs. Posterior for Team", 1:16)
+par(mfrow=c(2,2))
+for (i in 9:16) {
+    df <- bUpset[[i]]
+    plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
+         xlab="Wins", ylab="Probability", main=titles[i])
+    lines(priorProb~wins, data=df, lty=2)
+}
+
+# what if 1 seed is upset
+t1L <- t
+t1L[1] <- 16
+b1L <- bayesianTeam(t, t1L, M)
+titles <- paste("Prior vs. Posterior for Team", 1:16)
+par(mfrow=c(2,2))
+for (i in 1:16) {
+    df <- b1L[[i]]
+    plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
+         xlab="Wins", ylab="Probability", main=titles[i])
+    lines(priorProb~wins, data=df, lty=2)
+}
+
+# what if 2 seed is upset
+t2L <- t
+t2L[2] <- 15
+b2L <- bayesianTeam(t, t2L, M)
+titles <- paste("Prior vs. Posterior for Team", 1:16)
+par(mfrow=c(2,2))
+for (i in 1:16) {
+    df <- b2L[[i]]
+    plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
+         xlab="Wins", ylab="Probability", main=titles[i])
+    lines(priorProb~wins, data=df, lty=2)
+}
+
+# what if 3 seed is upset
+t3L <- t
+t3L[3] <- 14
+b3L <- bayesianTeam(t, t3L, M)
+titles <- paste("Prior vs. Posterior for Team", 1:16)
+par(mfrow=c(2,2))
+for (i in 1:16) {
+    df <- b3L[[i]]
+    plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1) lty=1,
+         xlab="Wins", ylab="Probability", main=titles[i])
+    lines(priorProb~wins, data=df, lty=2)
+}
+
+# what if 4 seed is upset
+t4L <- t
+t4L[4] <- 13
+b4L <- bayesianTeam(t, t4L, M)
+titles <- paste("Prior vs. Posterior for Team", 1:16)
+par(mfrow=c(2,2))
+for (i in 1:16) {
+    df <- b4L[[i]]
+    plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
+         xlab="Wins", ylab="Probability", main=titles[i])
+    lines(priorProb~wins, data=df, lty=2)
 }
 ```
 

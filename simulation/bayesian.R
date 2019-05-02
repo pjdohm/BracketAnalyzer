@@ -29,7 +29,7 @@ getPriorAndPosteriorWins <- function(oldBracket, newBracket, matchups, nSim=1000
     out <- prior
     colnames(out) <- c("teams", "priorFreq")
     
-    nTeams <- length(oldBracket)
+    nTeams <- ncol(matchups)
     for (team in 1:nTeams) {
         if (!(any(newBracket == team))) {
             tempDF <- data.frame(t(c(team, 0)))
@@ -102,3 +102,5 @@ getPriorAndPosteriorWins(B, newBracket, m)
 
 getExpectedWins(B, m)
 getExpectedWins(newBracket, m)
+
+getPriorAndPosteriorExpectedWins(B, newBracket, m)
