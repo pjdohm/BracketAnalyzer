@@ -603,8 +603,6 @@ gamma_42_boot_res <- boot_replicate(
     estimator=function(x) mean(x==1)
 )
 
-
-
 # Box plots
 boxplot(
     gamma_22_boot_res$boot,
@@ -615,4 +613,103 @@ boxplot(
 title("Probability that the strongest team wins")
 ```
 
-**Interpretation:** Controlling the mean, as the standard deviation increases, the team powers are more different from each other. Hence the probability that the strongest team wins would increase.
+**Interpretation:** Controlling the rate parameter, as the shape parameter increases, the team powers are less right-skewed. Hence the probability that the strongest team wins would decrease.
+
+## $\lambda$ in Exponential($\lambda$)
+
+```{r}
+numTeams = 8
+nSim = 1000
+
+# Exponential(1) team powers
+inv_cdf <- function(x) {return(-log(x) / 1)}
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(
+        genCrossTeamWinningProbabilities(
+         inverseCDF(
+            numTeams, 
+            inv_cdf
+          )
+        )
+    ))
+}
+
+exp_1_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+exp_1_winners = getWinners(exp_1_results)
+exp_1_boot_res <- boot_replicate(
+    exp_1_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Exponential(2) team powers
+inv_cdf <- function(x) {return(-log(x) / 2)}
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(
+        genCrossTeamWinningProbabilities(
+         inverseCDF(
+            numTeams, 
+            inv_cdf
+          )
+        )
+    ))
+}
+
+exp_2_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+exp_2_winners = getWinners(exp_2_results)
+exp_2_boot_res <- boot_replicate(
+    exp_2_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Exponential(3) team powers
+inv_cdf <- function(x) {return(-log(x) / 1)}
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(
+        genCrossTeamWinningProbabilities(
+         inverseCDF(
+            numTeams, 
+            inv_cdf
+          )
+        )
+    ))
+}
+
+exp_3_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+exp_3_winners = getWinners(exp_3_results)
+exp_3_boot_res <- boot_replicate(
+    exp_3_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Box plots
+boxplot(
+    exp_1_boot_res$boot,
+    exp_2_boot_res$boot,
+    exp_3_boot_res$boot,
+    names=c("Exponential(1)", "Exponential(2)", "Exponential(3)")
+)
+title("Probability that the strongest team wins")
+```
+
+**Interpretation:** As the rate parameter increases, the team powers are more right-skewed. Hence the probability that the strongest team wins would increase.
