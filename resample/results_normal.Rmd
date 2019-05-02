@@ -1,0 +1,450 @@
+---
+title: "Results"
+date: "Due May 3, 2019"
+output:
+  html_document:
+    theme: readable
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(fig.pos = '!h')
+```
+
+## Data Generation Functions
+
+```{r}
+genNormalPowers <- function(n, mean=0, sd=1) {
+  # INPUT:
+  # n is the number of teams
+  
+  # OUTPUT:
+  # returns a vector of team powers, sorted in decreasing order
+  powers <- rnorm(n, mean, sd)
+  return(sort(abs(powers), decreasing=TRUE))
+}
+
+# Reference: adapted from Yuchen Li (li215), HW2, Exercise 4
+
+acceptReject <- function(nsim, f, min, max, M) {
+  # INPUT:
+  # nsim is the number of simulations
+  # f is the target distribution
+  # min is the min value in the domain of f
+  # max is the max value in the domain of f
+  # max
+  # M >= sup{f(x)}
+  
+  # OUTPUT:
+  # returns a vector of random variates sampled from f, using the 
+  #   Accept-Reject method with Unif(min, max) as the reference distribution
+  k1 = 0             # counter for accepted samples
+  j1 = 0             # number of iterations required to get desired sample size
+  y1 = numeric(nsim)    # storing the sample
+  while(k1 < nsim){
+      u = runif(1)
+      x = runif(1, min, max)  # random variate from reference distribution
+      g1 = 1
+      if (u < f(x) / M / g1) {
+        # condition of accepting x in our sample
+        k1 = k1 + 1
+        y1[k1] = x
+      }
+      j1 = j1 + 1
+  }
+  return(sort(y1, decreasing=TRUE))
+}
+
+inverseCDF <- function(n, inv_cdf) {
+  # INPUT:
+  # n is the number of simulations
+  # inv_cdf is the inverse CDF function for f
+  
+  # OUTPUT:
+  # returns a vector of random variates sampled from PDF f,
+  #   using the Inverse CDF method
+  u = runif(n)
+  y = numeric(n)
+  for (i in 1:n) {
+    y[i] = inv_cdf(u[i])
+  }
+  return(sort(y, decreasing=TRUE))
+}
+
+genCrossTeamWinningProbabilities <- function(powers) {
+  # INPUT:
+  # powers is the teams powers
+  
+  # OUTPUT:
+  # returns an n x n matrix M where M_{ij} is the probability of team-i beating team-j
+  n = length(powers)
+  probs = matrix(nrow=n, ncol=n)
+  for (i in 1:n) {
+    for (j in 1:n) {
+      probs[i,j] = powers[i] / (powers[i] + powers[j])
+    }
+  }
+  return(probs)
+}
+```
+
+## Seeding Functions
+
+```{r}
+#' Creates a traditional tournament style seeding arrangement. 
+#'
+#' @param size is the number of seeds to generate. This needs
+#' to be a power of two.
+#'
+tournament_seeding = function(size) {
+    
+    #' Generates the next round of seeding based off the passed in round.
+    #'
+    #' @param seeds is the previous round of seeding to generate for.
+    #'
+    nextRound = function(seeds) {
+        
+        # Next round has twice the size
+        nextSize = length(seeds) * 2
+        out = numeric(nextSize)
+        idx = 1
+        
+        # Make sure to match up best seed with worst
+        for (seed in seeds) {
+            out[idx] = seed
+            out[idx + 1] = (nextSize + 1) - seed
+            idx = idx + 2
+        }
+        
+        return(out)
+    }
+    
+    # Stop if not a power of two
+    if (sum(as.numeric(intToBits(size))) != 1) {
+        stop("Size must be a power of two")
+    }
+    
+    # Special case when size is 2
+    if (size == 2) {
+        return(c(1, 2))
+    }
+    
+    # Calculate number of rounds
+    rounds = log2(size) - 1
+    
+    # Start with first two seeds
+    seeds = c(1, 2)
+    
+    # Iteratively generate next seeds
+    for (i in 1:rounds) {
+        seeds = nextRound(seeds)
+    }
+    
+    return(seeds)
+}
+
+#' Creates a seeding arrangement that is left skewed.
+#'
+#' @param size is the number of seeds to generate. This needs
+#' to be a power of two.
+#'
+left_skewed_seeding = function(size) {
+    
+    # Stop if not a power of two
+    if (sum(as.numeric(intToBits(size))) != 1) {
+        stop("Size must be a power of two")
+    }
+    
+    # Special case when size is 2
+    if (size == 2) {
+        return(c(1, 2))
+    }
+    
+    # Create seeds and left/right branches
+    seeds = 1:size
+    left_seeds = numeric(size / 2)
+    right_seeds = numeric(size / 2)
+    
+    # Indexes for the left/right branches
+    left_idx = 1
+    right_idx = 1
+    
+    # Keep track of which branch will get the next seed
+    left_turn = TRUE
+    
+    # For each iteration add the first and last seed to the
+    # current branch
+    for (i in 1:(size / 2)) {
+        if (left_turn) {
+            left_seeds[left_idx] = seeds[i]
+            left_seeds[left_idx + 1] = seeds[(size + 1) - i]
+            left_idx = left_idx + 2
+            left_turn = FALSE
+        } else {
+            right_seeds[right_idx] = seeds[i]
+            right_seeds[right_idx + 1] = seeds[(size + 1) - i]
+            right_idx = right_idx + 2
+            left_turn = TRUE
+        }
+    }
+    
+    # Combine branches
+    c(left_seeds, right_seeds)
+}
+
+#' Creates a random seeding arrangement. 
+#'
+#' @param size is the number of seeds to generate. This needs
+#' to be a power of two.
+#'
+random_seeding = function(size) {
+    # Stop if not a power of two
+    if (sum(as.numeric(intToBits(size))) != 1) {
+        stop("Size must be a power of two")
+    }
+    
+    return(sample(1:size, size))
+}
+```
+
+## Simulation Functions
+
+```{r}
+simGame <- function(teams, matchups) {
+  # function to simulate a game
+  
+  # INPUT:
+  # teams is a vector of two teams (indices) that are "playing'
+  # matchups is the matchup/probability matrix
+  
+  # OUTPUT:
+  # returns winner of game
+  
+  team1 <- teams[1]
+  team2 <- teams[2]
+  matchup <- matchups[team1, team2]
+  
+  if (runif(1) < matchup) {
+    return(team1)
+  } else {
+    return(team2)
+  }
+}
+
+simRound <- function(bracket, matchups) {
+  # function to simulate a round of a tournament given a bracket and probability matrix
+  
+  # INPUT:
+  # bracket is the bracket structure
+  # matchups is the matchup/probability matrix
+  
+  # OUTPUT:
+  # returns winners of the round
+  
+  nGames <- length(bracket)/2
+  outBracket <- c()
+  for (game in 1:nGames) {
+    teams <- bracket[(2*game - 1):(2*game)]
+    winner <- simGame(teams, matchups)
+    outBracket <- c(outBracket, winner)
+  }
+  
+  return(outBracket)
+}
+
+# want to capture number of wins each team has per tournament
+# list with the winning team
+# "winner = team #
+# "num wins" = c(how many wins each team has gotten)
+
+simTournament <- function(bracket, matchups) {
+  # function to simulate a tournament given a bracket and probability matrix
+  
+  # INPUT:
+  # bracket is the bracket structure
+  # matchups is the matchup/probability matrix
+  
+  # OUTPUT:
+  # returns winner of tournament
+  
+  nTeams <- length(bracket)
+  newBracket <- bracket
+  nRounds <- log2(nTeams)
+  
+  results = c("Winner"=-1,"WinsPerTeam"=list(rep(0, ncol(matchups))))
+  
+  for (round in 1:nRounds) {
+    #winsPrev = results["WinsPerTeam"]
+    newBracket <- simRound(newBracket, matchups)
+    for(i in newBracket){
+      results$WinsPerTeam[i] = results$WinsPerTeam[i]+1
+    }
+  }
+  
+  results["Winner"] = newBracket
+  return(results)
+}
+```
+
+## Resampling Functions
+
+```{r}
+#function to generate bootstrap replicates
+#INPUT:
+#x is vector of team ranking/ other measure of 
+#team power in different simulations
+#B is number of replicates to generate
+#estimator is the statistic we want, set as mean by
+#default
+#l is the length of bootstrap resample in each run
+#set to length of x by default
+#OUTPUT
+#a list of bootstrap replicates, bias ans standard error
+boot_replicate <- function(x, B = 5000, estimator = mean, l = length(x)){
+  boots <- replicate(B, estimator(sample(x,l,replace=TRUE)))
+  sd_b <- sd(boots)
+  bias_b <- mean(boots - estimator(x))
+  list(boot = boots, bias = bias_b, se = sd_b)
+}
+
+#function to generate jackknife replicates
+#INPUT:
+#x is vector of team ranking/ other measure of 
+#team power in different simulations
+#estimator is the statistic we want, set as mean by
+#default
+#OUTPUT
+#a list of jackknife replicates, bias ans standard error
+jack_replicate <- function(x, estimator = mean){
+  n <- length(x)
+  jack <- numeric(n)
+  #perform jackknife
+  for(i in 1:n)
+    jack[i] <- estimator(x[-i])
+  #bias using jackknife
+  bias_j <- (n-1)*(mean(jack)-estimator(x))
+  sumsq=sum((jack-mean(jack))^2)
+  se_j <- sqrt((n-1)/n)*sqrt(sumsq)
+  list(jack = jack,bias = bias_j, se = se_j)
+}
+```
+
+## Results
+
+```{r}
+getWinners = function(results) {
+    winnerList = c()
+    for(i in 1:(length(results) / 2)){
+        winnerList = c(winnerList,results[,i]$Winner)
+    }
+    return(winnerList)
+}
+
+getWinsPerTeam = function(results) {
+    winsPerTeamList = c()
+    for(i in 1:(length(results) / 2)){
+        winsPerTeamList = rbind(winsPerTeamList,results[,i]$WinsPerTeam)
+    }
+    return(winsPerTeamList)
+}
+```
+
+# Additional functions
+
+```{r}
+# Re-generate Team Powers and Cross-Team Winning Probabilities before each simulation
+simTournamentRegenerateSeedsAndProbs <- function(genSeeds, genProbs) {
+    bracket <- genSeeds()
+    matchups <- genProbs()
+    return(simTournament(bracket, matchups))
+}
+```
+
+# How do the parameters affect the probability that the strongest team wins?
+
+## $\mu$
+
+```{r}
+numTeams = 8
+nSim = 1000
+
+# Normal(1, 1) team powers
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams, mean=1)))
+}
+
+norm_11_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+norm_11_winners = getWinners(norm_11_results)
+norm_11_boot_res <- boot_replicate(
+    norm_11_winners,
+    estimator=function(x) mean(x==1)
+)
+
+plot(ecdf(norm_11_boot_res$boot))
+hist(norm_11_boot_res$boot, freq = F,50)
+
+# Normal(3, 1) team powers
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams, mean=3)))
+}
+
+norm_31_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+norm_31_winners = getWinners(norm_31_results)
+norm_31_boot_res <- boot_replicate(
+    norm_31_winners,
+    estimator=function(x) mean(x==1)
+)
+
+plot(ecdf(norm_31_boot_res$boot))
+hist(norm_31_boot_res$boot, freq = F,50)
+
+# Normal(9, 1) team powers
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams, mean=9)))
+}
+
+norm_91_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+norm_91_winners = getWinners(norm_91_results)
+norm_91_boot_res <- boot_replicate(
+    norm_91_winners,
+    estimator=function(x) mean(x==1)
+)
+
+plot(ecdf(norm_91_boot_res$boot))
+hist(norm_91_boot_res$boot, freq = F,50)
+
+# Box plots
+boxplot(
+    norm_11_boot_res$boot,
+    norm_31_boot_res$boot,
+    norm_91_boot_res$boot
+)
+```
+
+**Interpretation:** Controlling the standard deviation, as the mean increases, the team powers are more similar to each other. Hence the probability that the strongest team wins would decrease.
+
+
