@@ -365,7 +365,7 @@ simTournamentRegenerateSeedsAndProbs <- function(genSeeds, genProbs) {
 
 # How do the parameters affect the probability that the strongest team wins?
 
-## $\mu$
+## $\mu$ in Normal
 
 ```{r}
 numTeams = 8
@@ -390,9 +390,6 @@ norm_11_boot_res <- boot_replicate(
     estimator=function(x) mean(x==1)
 )
 
-plot(ecdf(norm_11_boot_res$boot))
-hist(norm_11_boot_res$boot, freq = F,50)
-
 # Normal(3, 1) team powers
 genSeeds <- function() {
     return(random_seeding(numTeams))
@@ -411,9 +408,6 @@ norm_31_boot_res <- boot_replicate(
     norm_31_winners,
     estimator=function(x) mean(x==1)
 )
-
-plot(ecdf(norm_31_boot_res$boot))
-hist(norm_31_boot_res$boot, freq = F,50)
 
 # Normal(9, 1) team powers
 genSeeds <- function() {
@@ -434,17 +428,191 @@ norm_91_boot_res <- boot_replicate(
     estimator=function(x) mean(x==1)
 )
 
-plot(ecdf(norm_91_boot_res$boot))
-hist(norm_91_boot_res$boot, freq = F,50)
-
 # Box plots
 boxplot(
     norm_11_boot_res$boot,
     norm_31_boot_res$boot,
-    norm_91_boot_res$boot
+    norm_91_boot_res$boot,
+    names=c("Normal(1,1)", "Normal(3,1)", "Normal(9,1)")
 )
+title("Probability that the strongest team wins")
 ```
 
 **Interpretation:** Controlling the standard deviation, as the mean increases, the team powers are more similar to each other. Hence the probability that the strongest team wins would decrease.
 
+## $\sigma$ in Normal
 
+```{r}
+numTeams = 8
+nSim = 1000
+
+# Normal(9, 1) team powers
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams, mean=9, sd=1)))
+}
+
+norm_91_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+norm_91_winners = getWinners(norm_91_results)
+norm_91_boot_res <- boot_replicate(
+    norm_91_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Normal(9, 3) team powers
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams, mean=9, sd=3)))
+}
+
+norm_93_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+norm_93_winners = getWinners(norm_93_results)
+norm_93_boot_res <- boot_replicate(
+    norm_93_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Normal(9, 5) team powers
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams, mean=9, sd=5)))
+}
+
+norm_95_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+norm_95_winners = getWinners(norm_95_results)
+norm_95_boot_res <- boot_replicate(
+    norm_95_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Box plots
+boxplot(
+    norm_91_boot_res$boot,
+    norm_93_boot_res$boot,
+    norm_95_boot_res$boot,
+    names=c("Normal(9,1)", "Normal(9,3)", "Normal(9,5)")
+)
+title("Probability that the strongest team wins")
+```
+
+**Interpretation:** Controlling the mean, as the standard deviation increases, the team powers are more different from each other. Hence the probability that the strongest team wins would increase.
+
+## $\alpha$ in Gamma($\alpha$, $\beta$)
+
+```{r}
+numTeams = 8
+nSim = 1000
+
+gammaPDF <- function(x, a, b) {
+    return(b^a / gamma(a) * x^(a-1) * exp(-b*x))
+}
+
+# Gamma(2,2) team powers
+f <- function(x) {
+    return(gammaPDF(x, 2, 2))
+}
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(
+        genCrossTeamWinningProbabilities(
+         acceptReject(numTeams, f, 0, 25, 0.2)
+        )
+    ))
+}
+
+gamma_22_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+gamma_22_winners = getWinners(gamma_22_results)
+gamma_22_boot_res <- boot_replicate(
+    gamma_22_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Gamma(3,2) team powers
+f <- function(x) {
+    return(gammaPDF(x, 3, 2))
+}
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(
+        genCrossTeamWinningProbabilities(
+         acceptReject(numTeams, f, 0, 25, 0.2)
+        )
+    ))
+}
+
+gamma_32_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+gamma_32_winners = getWinners(gamma_32_results)
+gamma_32_boot_res <- boot_replicate(
+    gamma_32_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Gamma(4,2) team powers
+f <- function(x) {
+    return(gammaPDF(x, 4, 2))
+}
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(
+        genCrossTeamWinningProbabilities(
+         acceptReject(numTeams, f, 0, 25, 0.2)
+        )
+    ))
+}
+
+gamma_42_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+gamma_42_winners = getWinners(gamma_42_results)
+gamma_42_boot_res <- boot_replicate(
+    gamma_42_winners,
+    estimator=function(x) mean(x==1)
+)
+
+
+
+# Box plots
+boxplot(
+    gamma_22_boot_res$boot,
+    gamma_32_boot_res$boot,
+    gamma_42_boot_res$boot,
+    names=c("Gamma(2,2)", "Gamma(3,2)", "Gamma(4,2)")
+)
+title("Probability that the strongest team wins")
+```
+
+**Interpretation:** Controlling the mean, as the standard deviation increases, the team powers are more different from each other. Hence the probability that the strongest team wins would increase.
