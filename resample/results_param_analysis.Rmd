@@ -613,7 +613,7 @@ boxplot(
 title("Probability that the strongest team wins")
 ```
 
-**Interpretation:** Controlling the rate parameter, as the shape parameter increases, the team powers are less right-skewed. Hence the probability that the strongest team wins would decrease.
+**Interpretation:** Controlling the rate parameter, as the shape parameter increases, the team powers are less right-skewed. 
 
 ## $\lambda$ in Exponential($\lambda$)
 
@@ -676,7 +676,7 @@ exp_2_boot_res <- boot_replicate(
 )
 
 # Exponential(3) team powers
-inv_cdf <- function(x) {return(-log(x) / 1)}
+inv_cdf <- function(x) {return(-log(x) / 3)}
 genSeeds <- function() {
     return(random_seeding(numTeams))
 }
@@ -712,4 +712,42 @@ boxplot(
 title("Probability that the strongest team wins")
 ```
 
-**Interpretation:** As the rate parameter increases, the team powers are more right-skewed. Hence the probability that the strongest team wins would increase.
+**Interpretation:** As the rate parameter increases, the team powers are more right-skewed. 
+
+## Combining the plots
+
+```{r}
+par(mfrow=c(2,2))
+
+boxplot(
+    norm_11_boot_res$boot,
+    norm_31_boot_res$boot,
+    norm_91_boot_res$boot,
+    names=c("N(1,1)", "N(3,1)", "N(9,1)")
+)
+title("Probability that the strongest team wins")
+
+boxplot(
+    norm_91_boot_res$boot,
+    norm_93_boot_res$boot,
+    norm_95_boot_res$boot,
+    names=c("N(9,1)", "N(9,3)", "N(9,5)")
+)
+title("Probability that the strongest team wins")
+
+boxplot(
+    gamma_22_boot_res$boot,
+    gamma_32_boot_res$boot,
+    gamma_42_boot_res$boot,
+    names=c("G(2,2)", "G(3,2)", "G(4,2)")
+)
+title("Probability that the strongest team wins")
+
+boxplot(
+    exp_1_boot_res$boot,
+    exp_2_boot_res$boot,
+    exp_3_boot_res$boot,
+    names=c("Exp(1)", "Exp(2)", "Exp(3)")
+)
+title("Probability that the strongest team wins")
+```
