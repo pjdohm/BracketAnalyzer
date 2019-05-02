@@ -145,11 +145,63 @@ genCrossTeamWinningProbabilities(
 )
 ```
 
+## Gamma(3, 2) team powers using Accept-Reject
+```{r}
+# Test `acceptReject`
+f <- function(x) {
+    return(2^3 / gamma(3) * x^2 * exp(-2*x))
+}
+hist(rgamma(1000, 3, rate=2))
+hist(acceptReject(1000, f, 0, 20, 0.5))
+# Actual
+genCrossTeamWinningProbabilities(
+ acceptReject(4, f, 0, 20, 0.5)
+)
+```
+
 ## Exp(1) team powers using Inverse CDF
 ```{r}
 # Test `inverseCDF`
 inv_cdf <- function(x) {return(-log(x))}
 hist(rexp(1000))
+hist(inverseCDF(
+    1000, 
+    inv_cdf
+  )
+)
+# Actual
+genCrossTeamWinningProbabilities(
+ inverseCDF(
+    4, 
+    inv_cdf
+  )
+)
+```
+
+## Exp(2) team powers using Inverse CDF
+```{r}
+# Test `inverseCDF`
+inv_cdf <- function(x) {return(-log(x) / 2)}
+hist(rexp(1000, rate=2))
+hist(inverseCDF(
+    1000, 
+    inv_cdf
+  )
+)
+# Actual
+genCrossTeamWinningProbabilities(
+ inverseCDF(
+    4, 
+    inv_cdf
+  )
+)
+```
+
+## Exp(3) team powers using Inverse CDF
+```{r}
+# Test `inverseCDF`
+inv_cdf <- function(x) {return(-log(x) / 3)}
+hist(rexp(1000, rate=3))
 hist(inverseCDF(
     1000, 
     inv_cdf
