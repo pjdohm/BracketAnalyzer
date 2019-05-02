@@ -17,77 +17,84 @@ knitr::opts_chunk$set(fig.pos = '!h')
 ## Data Generation Functions
 
 ```{r}
+#' Generates team powers based on the normal distribution.
+#' @author Yuchen Li
+#'
+#' @param n is the number of teams.
+#' @param mean is the mean of the normal distribution.
+#' @param sd is the standard deviation of the normal distribution.
+#'
+#' @return a vector of team powers, sorted in decreasing order.
+#'
 genNormalPowers <- function(n, mean=0, sd=1) {
-  # INPUT:
-  # n is the number of teams
-  
-  # OUTPUT:
-  # returns a vector of team powers, sorted in decreasing order
-  powers <- rnorm(n, mean, sd)
-  return(sort(abs(powers), decreasing=TRUE))
+    powers <- rnorm(n, mean, sd)
+    return(sort(abs(powers), decreasing=TRUE))
 }
 
-# Reference: adapted from Yuchen Li (li215), HW2, Exercise 4
-
+#' Performs the Accept-Reject method.
+#' @author Yuchen Li
+#' @references Yuchen Li (li215), HW2, Exercise 4
+#'
+#' @param nsim is the number of simulations.
+#' @param f is the target distribution.
+#' @param min is the minimum value in the domain of f.
+#' @param max is the maximum value in the domain of f.
+#' @param M >= sup{f(x)}
+#' 
+#' @return a vector of random variates sampled from f using the
+#' Accept-Reject method with Unif(min, max) as the reference distribution.
+#'
 acceptReject <- function(nsim, f, min, max, M) {
-  # INPUT:
-  # nsim is the number of simulations
-  # f is the target distribution
-  # min is the min value in the domain of f
-  # max is the max value in the domain of f
-  # max
-  # M >= sup{f(x)}
-  
-  # OUTPUT:
-  # returns a vector of random variates sampled from f, using the 
-  #   Accept-Reject method with Unif(min, max) as the reference distribution
-  k1 = 0             # counter for accepted samples
-  j1 = 0             # number of iterations required to get desired sample size
-  y1 = numeric(nsim)    # storing the sample
-  while(k1 < nsim){
-      u = runif(1)
-      x = runif(1, min, max)  # random variate from reference distribution
-      g1 = 1
-      if (u < f(x) / M / g1) {
-        # condition of accepting x in our sample
-        k1 = k1 + 1
-        y1[k1] = x
-      }
-      j1 = j1 + 1
-  }
-  return(sort(y1, decreasing=TRUE))
-}
-
-inverseCDF <- function(n, inv_cdf) {
-  # INPUT:
-  # n is the number of simulations
-  # inv_cdf is the inverse CDF function for f
-  
-  # OUTPUT:
-  # returns a vector of random variates sampled from PDF f,
-  #   using the Inverse CDF method
-  u = runif(n)
-  y = numeric(n)
-  for (i in 1:n) {
-    y[i] = inv_cdf(u[i])
-  }
-  return(sort(y, decreasing=TRUE))
-}
-
-genCrossTeamWinningProbabilities <- function(powers) {
-  # INPUT:
-  # powers is the teams powers
-  
-  # OUTPUT:
-  # returns an n x n matrix M where M_{ij} is the probability of team-i beating team-j
-  n = length(powers)
-  probs = matrix(nrow=n, ncol=n)
-  for (i in 1:n) {
-    for (j in 1:n) {
-      probs[i,j] = powers[i] / (powers[i] + powers[j])
+    k1 = 0             # counter for accepted samples
+    j1 = 0             # number of iterations required to get desired sample size
+    y1 = numeric(nsim) # storing the sample
+    while(k1 < nsim){
+        u = runif(1)
+        x = runif(1, min, max)  # random variate from reference distribution
+        g1 = 1
+        if (u < f(x) / M / g1) {
+            # condition of accepting x in our sample
+            k1 = k1 + 1
+            y1[k1] = x
+        }
+        j1 = j1 + 1
     }
-  }
-  return(probs)
+    return(sort(y1, decreasing=TRUE))
+}
+
+#' Performs the Inverse CDF method.
+#' @author Yuchen Li
+#' 
+#' @param n is the number of simulations.
+#' @param inv_cdf is the inverse CDF function for f.
+#' 
+#' @return a vector of random variates sampled from PDF f using the
+#' Inverse CDF method.
+#' 
+inverseCDF <- function(n, inv_cdf) {
+    u = runif(n)
+    y = numeric(n)
+    for (i in 1:n) {
+        y[i] = inv_cdf(u[i])
+    }
+    return(sort(y, decreasing=TRUE))
+}
+
+#' Generates cross team winning probabilities.
+#' @author Yuchen Li
+#' 
+#' @param powers is the team powers.
+#' 
+#' @return an n x n matrix M where M_{ij} is the probability of team-i beating team-j
+genCrossTeamWinningProbabilities <- function(powers) {
+    n = length(powers)
+    probs = matrix(nrow=n, ncol=n)
+    for (i in 1:n) {
+        for (j in 1:n) {
+            probs[i,j] = powers[i] / (powers[i] + powers[j])
+        }
+    }
+    return(probs)
 }
 ```
 
@@ -95,9 +102,12 @@ genCrossTeamWinningProbabilities <- function(powers) {
 
 ```{r}
 #' Creates a traditional tournament style seeding arrangement. 
+#' @author Eric Auster
 #'
 #' @param size is the number of seeds to generate. This needs
 #' to be a power of two.
+#'
+#' @return a vector containing the seeds.
 #'
 tournament_seeding = function(size) {
     
@@ -147,9 +157,12 @@ tournament_seeding = function(size) {
 }
 
 #' Creates a seeding arrangement that is left skewed.
+#' @author Eric Auster
 #'
 #' @param size is the number of seeds to generate. This needs
 #' to be a power of two.
+#'
+#' @return a vector containing the seeds.
 #'
 left_skewed_seeding = function(size) {
     
@@ -195,10 +208,13 @@ left_skewed_seeding = function(size) {
     c(left_seeds, right_seeds)
 }
 
-#' Creates a random seeding arrangement. 
+#' Creates a random seeding arrangement.
+#' @author Eric Auster
 #'
 #' @param size is the number of seeds to generate. This needs
 #' to be a power of two.
+#'
+#' @return a vector containing the seeds.
 #'
 random_seeding = function(size) {
     # Stop if not a power of two
@@ -213,86 +229,87 @@ random_seeding = function(size) {
 ## Simulation Functions
 
 ```{r}
+#' Simulates a single game between two teams.
+#' @author Jeffrey Chao, Phillip Dohm
+#' 
+#' @param teams vector containing the two teams to face-off.
+#' @param matchups probability matrix.
+#' 
+#' @return winner of the game.
+#' 
 simGame <- function(teams, matchups) {
-  # function to simulate a game
-  
-  # INPUT:
-  # teams is a vector of two teams (indices) that are "playing'
-  # matchups is the matchup/probability matrix
-  
-  # OUTPUT:
-  # returns winner of game
-  
-  team1 <- teams[1]
-  team2 <- teams[2]
-  matchup <- matchups[team1, team2]
-  
-  if (runif(1) < matchup) {
-    return(team1)
-  } else {
-    return(team2)
-  }
-}
-
-simRound <- function(bracket, matchups) {
-  # function to simulate a round of a tournament given a bracket and probability matrix
-  
-  # INPUT:
-  # bracket is the bracket structure
-  # matchups is the matchup/probability matrix
-  
-  # OUTPUT:
-  # returns winners of the round
-  
-  nGames <- length(bracket)/2
-  outBracket <- c()
-  for (game in 1:nGames) {
-    teams <- bracket[(2*game - 1):(2*game)]
-    winner <- simGame(teams, matchups)
-    outBracket <- c(outBracket, winner)
-  }
-  
-  return(outBracket)
-}
-
-# want to capture number of wins each team has per tournament
-# list with the winning team
-# "winner = team #
-# "num wins" = c(how many wins each team has gotten)
-
-simTournament <- function(bracket, matchups) {
-  # function to simulate a tournament given a bracket and probability matrix
-  
-  # INPUT:
-  # bracket is the bracket structure
-  # matchups is the matchup/probability matrix
-  
-  # OUTPUT:
-  # returns winner of tournament
-  
-  nTeams <- length(bracket)
-  newBracket <- bracket
-  nRounds <- log2(nTeams)
-  
-  results = c("Winner"=-1,"WinsPerTeam"=list(rep(0, ncol(matchups))))
-  
-  for (round in 1:nRounds) {
-    #winsPrev = results["WinsPerTeam"]
-    newBracket <- simRound(newBracket, matchups)
-    for(i in newBracket){
-      results$WinsPerTeam[i] = results$WinsPerTeam[i]+1
+    team1 <- teams[1]
+    team2 <- teams[2]
+    matchup <- matchups[team1, team2]
+    
+    if (runif(1) < matchup) {
+        return(team1)
+    } else {
+        return(team2)
     }
-  }
-  
-  results["Winner"] = newBracket
-  return(results)
+}
+
+#' Simulates an entire round of a tournament.
+#' @author Jeffrey Chao, Phillip Dohm
+#' 
+#' @param bracket is the bracket structure.
+#' @param matchups is the probability matrix.
+#' 
+#' @return vector containing the winners of the round.
+#' 
+simRound <- function(bracket, matchups) {
+    nGames <- length(bracket)/2
+    outBracket <- c()
+    for (game in 1:nGames) {
+        teams <- bracket[(2*game - 1):(2*game)]
+        winner <- simGame(teams, matchups)
+        outBracket <- c(outBracket, winner)
+    }
+    
+    return(outBracket)
+}
+
+#' Simulates an entire tournament given a bracket and probability matrix.
+#' @author Jeffrey Chao, Phillip Dohm
+#' 
+#' @param bracket is the bracket structure.
+#' @param matchups is the probability matrix.
+#' 
+#' @return list containing the tournment winner and vector that stores
+#' how many wins each team has gotten.
+#' 
+simTournament <- function(bracket, matchups) {
+    nTeams <- length(bracket)
+    newBracket <- bracket
+    nRounds <- log2(nTeams)
+    
+    results = c("Winner"=-1,"WinsPerTeam"=list(rep(0, ncol(matchups))))
+    
+    for (round in 1:nRounds) {
+        #winsPrev = results["WinsPerTeam"]
+        newBracket <- simRound(newBracket, matchups)
+        for(i in newBracket){
+            results$WinsPerTeam[i] = results$WinsPerTeam[i]+1
+        }
+    }
+    
+    results["Winner"] = newBracket
+    return(results)
 }
 ```
 
 ## Bayesian Functions
 
 ```{r}
-# get win distribution of a bracket (via simulation)
+#' Gets the win distribution for teams after a number of simulations.
+#' @author Phillip Dohm
+#' 
+#' @param bracket is the tournament bracket structure.
+#' @param matchups is the probability matrix.
+#' @param nSim is the number of simulations.
+#' 
+#' @return is table containing the win distribution for each team.
+#' 
 getWinDistribution <- function(bracket, matchups, nSim=10000) {
     simResults <- replicate(nSim, simTournament(bracket, matchups), simplify='array')
     winners <- numeric(nSim)
@@ -303,8 +320,16 @@ getWinDistribution <- function(bracket, matchups, nSim=10000) {
     return(out)
 }
 
-
-# get prior and posterior win distributions of an old and new bracket
+#' Gets the prior and posterior win distributions of an old and new bracket.
+#' @author Phillip Dohm
+#' 
+#' @param oldBracket is the prior bracket to generate win distribution from.
+#' @param newBracket is the posterior bracket to generate win distribution from.
+#' @param matchups is the probability matrix.
+#' @param nSim is the number of simulations.
+#' 
+#' @return table containing the prior and posterior win distributions.
+#' 
 getPriorAndPosteriorWins <- function(oldBracket, newBracket, matchups, nSim=10000) {
     prior <- getWinDistribution(oldBracket, matchups, nSim)
     posterior <- getWinDistribution(newBracket, matchups, nSim)
@@ -327,7 +352,16 @@ getPriorAndPosteriorWins <- function(oldBracket, newBracket, matchups, nSim=1000
     return(out)
 }
 
-
+#' Gets the expected number of wins for each team in a given bracket.
+#' @author Phillip Dohm
+#' 
+#' @param bracket is the bracket structure.
+#' @param matchups is the probability matrix.
+#' @param nSim is the number of simulations.
+#' 
+#' @return table containing the expected number of wins for each team
+#' and standard distribution.
+#' 
 getExpectedWins <- function(bracket, matchups, nSim=10000) {
     simResults <- replicate(nSim, simTournament(bracket, matchups), simplify='array')
     
@@ -342,7 +376,16 @@ getExpectedWins <- function(bracket, matchups, nSim=10000) {
     return(out)
 }
 
-
+#' Gets the prior and posterior expected wins of an old and new bracket.
+#' @author Phillip Dohm
+#' 
+#' @param oldBracket is the prior bracket to generate expected wins from.
+#' @param newBracket is the posterior bracket to generate expected wins from.
+#' @param matchups is the probability matrix.
+#' @param nSim is the number of simulations.
+#' 
+#' @return table containing the prior and posterior expected wins.
+#' 
 getPriorAndPosteriorExpectedWins <- function(oldBracket, newBracket, matchups, nSim=10000) {
     prior <- getExpectedWins(oldBracket, matchups, nSim)
     posterior <- getExpectedWins(newBracket, matchups, nSim)
@@ -373,43 +416,42 @@ getPriorAndPosteriorExpectedWins <- function(oldBracket, newBracket, matchups, n
 ## Resampling Functions
 
 ```{r}
-#function to generate bootstrap replicates
-#INPUT:
-#x is vector of team ranking/ other measure of 
-#team power in different simulations
-#B is number of replicates to generate
-#estimator is the statistic we want, set as mean by
-#default
-#l is the length of bootstrap resample in each run
-#set to length of x by default
-#OUTPUT
-#a list of bootstrap replicates, bias ans standard error
+#' Generates bootstrap replicates.
+#' @author Ziqin Xiong
+#' 
+#' @param x is a vector of team ranking or other measure of team power in different simulations.
+#' @param B is number of replicates to generate.
+#' @param estimator is the statistic we want, set as mean by default.
+#' @param l is the length of bootstrap resample in each run.
+#' 
+#' @return list of bootstrap replicates, bias and standard error.
+#' 
 boot_replicate <- function(x, B = 5000, estimator = mean, l = length(x)){
-  boots <- replicate(B, estimator(sample(x,l,replace=TRUE)))
-  sd_b <- sd(boots)
-  bias_b <- mean(boots - estimator(x))
-  list(boot = boots, bias = bias_b, se = sd_b)
+    boots <- replicate(B, estimator(sample(x,l,replace=TRUE)))
+    sd_b <- sd(boots)
+    bias_b <- mean(boots - estimator(x))
+    list(boot = boots, bias = bias_b, se = sd_b)
 }
 
-#function to generate jackknife replicates
-#INPUT:
-#x is vector of team ranking/ other measure of 
-#team power in different simulations
-#estimator is the statistic we want, set as mean by
-#default
-#OUTPUT
-#a list of jackknife replicates, bias ans standard error
+#' Generate jackknife replicates.
+#' @author Ziqin Xiong
+#' 
+#' @param x is vector of team ranking or other measure of team power in different simulations.
+#' @param estimator is the statistic we want, set as mean by default.
+#' 
+#' @return list of jackknife replicates, bias and standard error.
+#' 
 jack_replicate <- function(x, estimator = mean){
-  n <- length(x)
-  jack <- numeric(n)
-  #perform jackknife
-  for(i in 1:n)
-    jack[i] <- estimator(x[-i])
-  #bias using jackknife
-  bias_j <- (n-1)*(mean(jack)-estimator(x))
-  sumsq=sum((jack-mean(jack))^2)
-  se_j <- sqrt((n-1)/n)*sqrt(sumsq)
-  list(jack = jack,bias = bias_j, se = se_j)
+    n <- length(x)
+    jack <- numeric(n)
+    #perform jackknife
+    for(i in 1:n)
+        jack[i] <- estimator(x[-i])
+    #bias using jackknife
+    bias_j <- (n-1)*(mean(jack)-estimator(x))
+    sumsq=sum((jack-mean(jack))^2)
+    se_j <- sqrt((n-1)/n)*sqrt(sumsq)
+    list(jack = jack,bias = bias_j, se = se_j)
 }
 ```
 

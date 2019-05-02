@@ -132,7 +132,13 @@ $(document).ready(function () {
 <li><a href="#methods">Methods</a></li>
 <li><a href="#results">Results</a></li>
 <li><a href="#discussion">Discussion</a></li>
-<li><a href="#appendix">Appendix</a></li>
+<li><a href="#appendix">Appendix</a><ul>
+<li><a href="#data-generation-functions">Data Generation Functions</a></li>
+<li><a href="#seeding-functions">Seeding Functions</a></li>
+<li><a href="#simulation-functions">Simulation Functions</a></li>
+<li><a href="#bayesian-functions">Bayesian Functions</a></li>
+<li><a href="#resampling-functions">Resampling Functions</a></li>
+</ul></li>
 </ul>
 </div>
 
@@ -147,6 +153,15 @@ $(document).ready(function () {
 </div>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
+<p>Anticipating the winner of a tournament such as in the NBA or MLB is part of what makes watching these sports entertaining. These tournaments often utilize a “bracket” structure, which is a tree diagram that represents the series of games played. For example, in the 8 team single elimination bracket seen in Figure 1, the bracket proceeds from left to right, in which Team A plays Team B, Team C plays Team D, and so on. The winning team of each match is denoted by marking the team name on the parent branch. Respective parent branches then play each other until we reach the root of the tree, which will denote the winner of the tournament.</p>
+<p>Most major North American professional sports leagues hold a bracket-style tournament at the end of their season, known as a “playoff”. Notably, the NCAA holds a basketball tournament with 68 college teams, and traditionally, fans will predict brackets outcomes in an event known as “March Madness”.</p>
+<p>Our problem of interest consists of discovering the most likely bracket outcome in a tournament given data on head-to-head matchups between teams. The outcome of this type of analysis is potentially important to coaches, viewers, and the team members themselves. It can be especially important to sports bettors, who traditionally rely on human intuition rather than data-driven techniques to make their bets. According to sports journalist and bracketology expert Richard Sandomir, studying bracket prediction can have relevance beyond sports, such as in pop culture, nature, and history.</p>
+<div class="figure" style="text-align: center">
+<img src="data:image/png;base64,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" alt="Figure 1" width="50%" />
+<p class="caption">
+Figure 1
+</p>
+</div>
 <hr />
 </div>
 <div id="methods" class="section level2">
@@ -163,7 +178,438 @@ $(document).ready(function () {
 </div>
 <div id="appendix" class="section level2">
 <h2>Appendix</h2>
+<div id="data-generation-functions" class="section level3">
+<h3>Data Generation Functions</h3>
+<pre class="r"><code>#' Generates team powers based on the normal distribution.
+#' @author Yuchen Li
+#'
+#' @param n is the number of teams.
+#' @param mean is the mean of the normal distribution.
+#' @param sd is the standard deviation of the normal distribution.
+#'
+#' @return a vector of team powers, sorted in decreasing order.
+#'
+genNormalPowers &lt;- function(n, mean=0, sd=1) {
+    powers &lt;- rnorm(n, mean, sd)
+    return(sort(abs(powers), decreasing=TRUE))
+}
+
+#' Performs the Accept-Reject method.
+#' @author Yuchen Li
+#' @references Yuchen Li (li215), HW2, Exercise 4
+#'
+#' @param nsim is the number of simulations.
+#' @param f is the target distribution.
+#' @param min is the minimum value in the domain of f.
+#' @param max is the maximum value in the domain of f.
+#' @param M &gt;= sup{f(x)}
+#' 
+#' @return a vector of random variates sampled from f using the
+#' Accept-Reject method with Unif(min, max) as the reference distribution.
+#'
+acceptReject &lt;- function(nsim, f, min, max, M) {
+    k1 = 0             # counter for accepted samples
+    j1 = 0             # number of iterations required to get desired sample size
+    y1 = numeric(nsim) # storing the sample
+    while(k1 &lt; nsim){
+        u = runif(1)
+        x = runif(1, min, max)  # random variate from reference distribution
+        g1 = 1
+        if (u &lt; f(x) / M / g1) {
+            # condition of accepting x in our sample
+            k1 = k1 + 1
+            y1[k1] = x
+        }
+        j1 = j1 + 1
+    }
+    return(sort(y1, decreasing=TRUE))
+}
+
+#' Performs the Inverse CDF method.
+#' @author Yuchen Li
+#' 
+#' @param n is the number of simulations.
+#' @param inv_cdf is the inverse CDF function for f.
+#' 
+#' @return a vector of random variates sampled from PDF f using the
+#' Inverse CDF method.
+#' 
+inverseCDF &lt;- function(n, inv_cdf) {
+    u = runif(n)
+    y = numeric(n)
+    for (i in 1:n) {
+        y[i] = inv_cdf(u[i])
+    }
+    return(sort(y, decreasing=TRUE))
+}
+
+#' Generates cross team winning probabilities.
+#' @author Yuchen Li
+#' 
+#' @param powers is the team powers.
+#' 
+#' @return an n x n matrix M where M_{ij} is the probability of team-i beating team-j
+genCrossTeamWinningProbabilities &lt;- function(powers) {
+    n = length(powers)
+    probs = matrix(nrow=n, ncol=n)
+    for (i in 1:n) {
+        for (j in 1:n) {
+            probs[i,j] = powers[i] / (powers[i] + powers[j])
+        }
+    }
+    return(probs)
+}</code></pre>
+</div>
+<div id="seeding-functions" class="section level3">
+<h3>Seeding Functions</h3>
+<pre class="r"><code>#' Creates a traditional tournament style seeding arrangement. 
+#' @author Eric Auster
+#'
+#' @param size is the number of seeds to generate. This needs
+#' to be a power of two.
+#'
+#' @return a vector containing the seeds.
+#'
+tournament_seeding = function(size) {
+    
+    #' Generates the next round of seeding based off the passed in round.
+    #'
+    #' @param seeds is the previous round of seeding to generate for.
+    #'
+    nextRound = function(seeds) {
+        
+        # Next round has twice the size
+        nextSize = length(seeds) * 2
+        out = numeric(nextSize)
+        idx = 1
+        
+        # Make sure to match up best seed with worst
+        for (seed in seeds) {
+            out[idx] = seed
+            out[idx + 1] = (nextSize + 1) - seed
+            idx = idx + 2
+        }
+        
+        return(out)
+    }
+    
+    # Stop if not a power of two
+    if (sum(as.numeric(intToBits(size))) != 1) {
+        stop(&quot;Size must be a power of two&quot;)
+    }
+    
+    # Special case when size is 2
+    if (size == 2) {
+        return(c(1, 2))
+    }
+    
+    # Calculate number of rounds
+    rounds = log2(size) - 1
+    
+    # Start with first two seeds
+    seeds = c(1, 2)
+    
+    # Iteratively generate next seeds
+    for (i in 1:rounds) {
+        seeds = nextRound(seeds)
+    }
+    
+    return(seeds)
+}
+
+#' Creates a seeding arrangement that is left skewed.
+#' @author Eric Auster
+#'
+#' @param size is the number of seeds to generate. This needs
+#' to be a power of two.
+#'
+#' @return a vector containing the seeds.
+#'
+left_skewed_seeding = function(size) {
+    
+    # Stop if not a power of two
+    if (sum(as.numeric(intToBits(size))) != 1) {
+        stop(&quot;Size must be a power of two&quot;)
+    }
+    
+    # Special case when size is 2
+    if (size == 2) {
+        return(c(1, 2))
+    }
+    
+    # Create seeds and left/right branches
+    seeds = 1:size
+    left_seeds = numeric(size / 2)
+    right_seeds = numeric(size / 2)
+    
+    # Indexes for the left/right branches
+    left_idx = 1
+    right_idx = 1
+    
+    # Keep track of which branch will get the next seed
+    left_turn = TRUE
+    
+    # For each iteration add the first and last seed to the
+    # current branch
+    for (i in 1:(size / 2)) {
+        if (left_turn) {
+            left_seeds[left_idx] = seeds[i]
+            left_seeds[left_idx + 1] = seeds[(size + 1) - i]
+            left_idx = left_idx + 2
+            left_turn = FALSE
+        } else {
+            right_seeds[right_idx] = seeds[i]
+            right_seeds[right_idx + 1] = seeds[(size + 1) - i]
+            right_idx = right_idx + 2
+            left_turn = TRUE
+        }
+    }
+    
+    # Combine branches
+    c(left_seeds, right_seeds)
+}
+
+#' Creates a random seeding arrangement.
+#' @author Eric Auster
+#'
+#' @param size is the number of seeds to generate. This needs
+#' to be a power of two.
+#'
+#' @return a vector containing the seeds.
+#'
+random_seeding = function(size) {
+    # Stop if not a power of two
+    if (sum(as.numeric(intToBits(size))) != 1) {
+        stop(&quot;Size must be a power of two&quot;)
+    }
+    
+    return(sample(1:size, size))
+}</code></pre>
+</div>
+<div id="simulation-functions" class="section level3">
+<h3>Simulation Functions</h3>
+<pre class="r"><code>#' Simulates a single game between two teams.
+#' @author Jeffrey Chao, Phillip Dohm
+#' 
+#' @param teams vector containing the two teams to face-off.
+#' @param matchups probability matrix.
+#' 
+#' @return winner of the game.
+#' 
+simGame &lt;- function(teams, matchups) {
+    team1 &lt;- teams[1]
+    team2 &lt;- teams[2]
+    matchup &lt;- matchups[team1, team2]
+    
+    if (runif(1) &lt; matchup) {
+        return(team1)
+    } else {
+        return(team2)
+    }
+}
+
+#' Simulates an entire round of a tournament.
+#' @author Jeffrey Chao, Phillip Dohm
+#' 
+#' @param bracket is the bracket structure.
+#' @param matchups is the probability matrix.
+#' 
+#' @return vector containing the winners of the round.
+#' 
+simRound &lt;- function(bracket, matchups) {
+    nGames &lt;- length(bracket)/2
+    outBracket &lt;- c()
+    for (game in 1:nGames) {
+        teams &lt;- bracket[(2*game - 1):(2*game)]
+        winner &lt;- simGame(teams, matchups)
+        outBracket &lt;- c(outBracket, winner)
+    }
+    
+    return(outBracket)
+}
+
+#' Simulates an entire tournament given a bracket and probability matrix.
+#' @author Jeffrey Chao, Phillip Dohm
+#' 
+#' @param bracket is the bracket structure.
+#' @param matchups is the probability matrix.
+#' 
+#' @return list containing the tournment winner and vector that stores
+#' how many wins each team has gotten.
+#' 
+simTournament &lt;- function(bracket, matchups) {
+    nTeams &lt;- length(bracket)
+    newBracket &lt;- bracket
+    nRounds &lt;- log2(nTeams)
+    
+    results = c(&quot;Winner&quot;=-1,&quot;WinsPerTeam&quot;=list(rep(0, ncol(matchups))))
+    
+    for (round in 1:nRounds) {
+        #winsPrev = results[&quot;WinsPerTeam&quot;]
+        newBracket &lt;- simRound(newBracket, matchups)
+        for(i in newBracket){
+            results$WinsPerTeam[i] = results$WinsPerTeam[i]+1
+        }
+    }
+    
+    results[&quot;Winner&quot;] = newBracket
+    return(results)
+}</code></pre>
+</div>
+<div id="bayesian-functions" class="section level3">
+<h3>Bayesian Functions</h3>
+<pre class="r"><code>#' Gets the win distribution for teams after a number of simulations.
+#' @author Phillip Dohm
+#' 
+#' @param bracket is the tournament bracket structure.
+#' @param matchups is the probability matrix.
+#' @param nSim is the number of simulations.
+#' 
+#' @return is table containing the win distribution for each team.
+#' 
+getWinDistribution &lt;- function(bracket, matchups, nSim=10000) {
+    simResults &lt;- replicate(nSim, simTournament(bracket, matchups), simplify='array')
+    winners &lt;- numeric(nSim)
+    for(i in 1:nSim) winners[i] = simResults[,i]$Winner
+    out &lt;- data.frame(table(winners))
+    colnames(out) &lt;- c(&quot;teams&quot;, &quot;freq&quot;)
+    out$teams &lt;- as.numeric(out$teams)
+    return(out)
+}
+
+#' Gets the prior and posterior win distributions of an old and new bracket.
+#' @author Phillip Dohm
+#' 
+#' @param oldBracket is the prior bracket to generate win distribution from.
+#' @param newBracket is the posterior bracket to generate win distribution from.
+#' @param matchups is the probability matrix.
+#' @param nSim is the number of simulations.
+#' 
+#' @return table containing the prior and posterior win distributions.
+#' 
+getPriorAndPosteriorWins &lt;- function(oldBracket, newBracket, matchups, nSim=10000) {
+    prior &lt;- getWinDistribution(oldBracket, matchups, nSim)
+    posterior &lt;- getWinDistribution(newBracket, matchups, nSim)
+    
+    out &lt;- prior
+    colnames(out) &lt;- c(&quot;teams&quot;, &quot;priorFreq&quot;)
+    
+    nTeams &lt;- length(oldBracket)
+    for (team in 1:nTeams) {
+        if (!(any(newBracket == team))) {
+            tempDF &lt;- data.frame(t(c(team, 0)))
+            colnames(tempDF) &lt;- c(&quot;teams&quot;, &quot;freq&quot;)
+            posterior &lt;- rbind(posterior, tempDF)
+        }
+    }
+    
+    posterior &lt;- posterior[order(posterior$teams),]
+    out$postFreq &lt;- posterior$freq
+    
+    return(out)
+}
+
+#' Gets the expected number of wins for each team in a given bracket.
+#' @author Phillip Dohm
+#' 
+#' @param bracket is the bracket structure.
+#' @param matchups is the probability matrix.
+#' @param nSim is the number of simulations.
+#' 
+#' @return table containing the expected number of wins for each team
+#' and standard distribution.
+#' 
+getExpectedWins &lt;- function(bracket, matchups, nSim=10000) {
+    simResults &lt;- replicate(nSim, simTournament(bracket, matchups), simplify='array')
+    
+    winsPerTeam &lt;- c()
+    for(i in 1:nSim) winsPerTeam = rbind(winsPerTeam, simResults[,i]$WinsPerTeam)
+    expWins &lt;- apply(winsPerTeam, MARGIN=2, FUN=mean)
+    sdWins &lt;- apply(winsPerTeam, MARGIN=2, FUN=sd)
+    
+    teams &lt;- 1:ncol(matchups)
+    out &lt;- data.frame(teams, expWins, sdWins)
+    out$teams &lt;- as.numeric(out$teams)
+    return(out)
+}
+
+#' Gets the prior and posterior expected wins of an old and new bracket.
+#' @author Phillip Dohm
+#' 
+#' @param oldBracket is the prior bracket to generate expected wins from.
+#' @param newBracket is the posterior bracket to generate expected wins from.
+#' @param matchups is the probability matrix.
+#' @param nSim is the number of simulations.
+#' 
+#' @return table containing the prior and posterior expected wins.
+#' 
+getPriorAndPosteriorExpectedWins &lt;- function(oldBracket, newBracket, matchups, nSim=10000) {
+    prior &lt;- getExpectedWins(oldBracket, matchups, nSim)
+    posterior &lt;- getExpectedWins(newBracket, matchups, nSim)
+    
+    out &lt;- prior
+    colnames(out) &lt;- c(&quot;teams&quot;, &quot;priorExp&quot;, &quot;priorSD&quot;)
+    
+    totTeams &lt;- ncol(matchups)
+    oldTeams &lt;- length(oldBracket)
+    newTeams &lt;- length(newBracket)
+    
+    oldRounds &lt;- log2(totTeams) - log2(oldTeams)
+    newRounds &lt;- log2(totTeams) - log2(newTeams)
+    
+    out$priorExp &lt;- out$priorExp
+    out$postExp &lt;- posterior$expWins
+    out$postSD &lt;- posterior$sdWins
+    
+    for (team in 1:totTeams) {
+        if (any(newBracket == team)) out$postExp[team] = out$postExp[team] + newRounds
+        if (any(oldBracket == team)) out$priorExp[team] = out$priorExp[team] + oldRounds
+    }
+    
+    return(out)
+}</code></pre>
+</div>
+<div id="resampling-functions" class="section level3">
+<h3>Resampling Functions</h3>
+<pre class="r"><code>#' Generates bootstrap replicates.
+#' @author Ziqin Xiong
+#' 
+#' @param x is a vector of team ranking or other measure of team power in different simulations.
+#' @param B is number of replicates to generate.
+#' @param estimator is the statistic we want, set as mean by default.
+#' @param l is the length of bootstrap resample in each run.
+#' 
+#' @return list of bootstrap replicates, bias and standard error.
+#' 
+boot_replicate &lt;- function(x, B = 5000, estimator = mean, l = length(x)){
+    boots &lt;- replicate(B, estimator(sample(x,l,replace=TRUE)))
+    sd_b &lt;- sd(boots)
+    bias_b &lt;- mean(boots - estimator(x))
+    list(boot = boots, bias = bias_b, se = sd_b)
+}
+
+#' Generate jackknife replicates.
+#' @author Ziqin Xiong
+#' 
+#' @param x is vector of team ranking or other measure of team power in different simulations.
+#' @param estimator is the statistic we want, set as mean by default.
+#' 
+#' @return list of jackknife replicates, bias and standard error.
+#' 
+jack_replicate &lt;- function(x, estimator = mean){
+    n &lt;- length(x)
+    jack &lt;- numeric(n)
+    #perform jackknife
+    for(i in 1:n)
+        jack[i] &lt;- estimator(x[-i])
+    #bias using jackknife
+    bias_j &lt;- (n-1)*(mean(jack)-estimator(x))
+    sumsq=sum((jack-mean(jack))^2)
+    se_j &lt;- sqrt((n-1)/n)*sqrt(sumsq)
+    list(jack = jack,bias = bias_j, se = se_j)
+}</code></pre>
 <hr />
+</div>
 </div>
 
 
