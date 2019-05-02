@@ -33,17 +33,33 @@ Anticipating the winner of a tournament such as in the NBA or MLB is part of wha
 
 Most major North American professional sports leagues hold a bracket-style tournament at the end of their season, known as a “playoff”.  Notably, the NCAA holds a basketball tournament with 68 college teams, and traditionally, fans will predict brackets outcomes in an event known as “March Madness”.  
 
-Our problem of interest consists of discovering the most likely bracket outcome in a tournament given data on head-to-head matchups between teams.  The outcome of this type of analysis is potentially important to coaches, viewers, and the team members themselves.  It can be especially important to sports bettors, who traditionally rely on human intuition rather than data-driven techniques to make their bets.  According to sports journalist and bracketology expert Richard Sandomir, studying bracket prediction can have relevance beyond sports, such as in pop culture, nature, and history.  
-
 ```{r, echo=FALSE, out.width = "50%", fig.pos="h", fig.align="center", fig.cap="Figure 1"}
 include_graphics("Figure 1.png")
 ```
+
+Our problem of interest consists of discovering the most likely bracket outcome in a tournament given data on head-to-head matchups between teams.  The outcome of this type of analysis is potentially important to coaches, viewers, and the team members themselves.  It can be especially important to sports bettors, who traditionally rely on human intuition rather than data-driven techniques to make their bets.  According to sports journalist and bracketology expert Richard Sandomir, studying bracket prediction can have relevance beyond sports, such as in pop culture, nature, and history.  
 
 -----
 
 ## Methods
 
+### Tournament Simulation
 
+The first step of simulating a tournament is providing each team with a seed. A seed defines where in the bracket each team will be placed, and usually stronger teams get lower seed numbers while weaker teams get higher seed numbers. The results of the tournament can be greatly affected by how the tournament is seeded, and because of this, we have created three different kinds of seeding functions that are defined in the [Appendix] at section [Seeding Functions]. The most notable seeding function is `tournament_seeding` which generates a bracket layout that is quite common in traditional real world tournaments where the structure is set up in such a way that seed 1 and seed 2 are most likely to be finalists in the last tournament matchup.  
+
+We simulate tournament brackets using Monte Carlo simulation. Given the same set of teams, we simulate tournament results thousands of times to get data on tournament winners and how far on average each team proceeds. Monte Carlo inference works well for this purpose since early round results have a snowball effect on later round results. For example, in Figure 2, we see an example tournament run. If we imagine that Team B beat Team A in round 1 instead, the head-to-head win probability would change for the first match of round 2. Then the probability of D advancing to round 3 and eventually winning would change as well.
+
+```{r, echo=FALSE, out.width = "50%", fig.pos="h", fig.align="center", fig.cap="Figure 2"}
+include_graphics("Figure 2.png")
+```
+
+The algorithm for simulating a single bracketed tournament can be seen in the appendix under [Simulation Functions], and works roughly as follows:  
+
+1. Take in a tournament bracket in the form of a vector of teams, and a square probability matrix $M$ where $M_{ij}$ is the probability of team $i$ beating team $j$.  
+2. Simulate each individual game in round 1, returning a new bracket that represents the teams going into round 2.  Then simulate round 2, returning a new bracket that represents teams going into round 3, and so on, for $log_2(n)$ rounds where $n$ is the number of teams.  
+3. Return the winner of the tournament and a vector of integers representing the number of wins each team had.  
+
+We then get our Monte Carlo simulation results in the form of a 2-D array by using `replicate` on our tournament simulation function.  
 
 -----
 
