@@ -569,7 +569,7 @@ We will utilize the various data generation methods to study how changing the pa
 
 Additionally, we have looked up some actual game histories and calculated the actual cross-team winning probabilities, as described below.
 
-#### MLB Game Logs data
+#### MLB Data
 
 Major League Baseball (MLB) is the oldest and largest professional baseball organization in U.S and Canada. It has 30 teams playing in 2 major leagues: National League (NL) and American League (AL). NL and AL were seperate legal entitles formed in 1876 and 1901 respectively, and they cooperated to found MLB in 1903.  We obtained free MLB game logs from [Retrosheet](www.retrosheet.org). Since game statistics are highly time-sensitive (a strong team may lose its dominance in 1 season), we use recent 3 years' game log (2016, 2017 and 2018) to build the winning probability matrix $M$. 
 
@@ -633,7 +633,7 @@ The motivation for performing Bayesian analysis on brackets is to see how certai
 
 For an example, if the lowest seed team upsets the highest seed team (like UMBC vs. Virginia in March Madness 2018), there may be a significant impact on the rest of the bracket. One possible impact is that the team(s) who would play the top seed in the following round have much better expected performance, because their second round opponent is a weaker team. However, we would not expect this result to impact teams on the other side of the bracket (e.g. the 2 or 3 seed teams) as much as the teams that are "closer" to playing the top seed.
 
-In order to simulate a prior and posterior distribution, we perform a Monte Carlo tournament simulation on the initial bracket, and the updated bracket. See the Tournament Simulation section for more information on this. For consistency, we use the same bracket structure (seeding) and matchup matrix (generated from Normal powers) for all simulations. We perform many of these simulations and keep track of the number of wins each team had in each simulation. After a sufficient number of replications, we can estimate how likely each team is to win a certain number of games under both the initial bracket and the updated bracket. We obtain a data frame for each team that looks similar to this:
+In order to simulate a prior and posterior distribution, we perform a Monte Carlo tournament simulation on the initial bracket, and the updated bracket. See the [Tournament Simulation] section for more information on this. For consistency, we use the same bracket structure (seeding) and matchup matrix (generated from Normal powers) for all simulations. We perform many of these simulations and keep track of the number of wins each team had in each simulation. After a sufficient number of replications, we can estimate how likely each team is to win a certain number of games under both the initial bracket and the updated bracket. We obtain a data frame for each team that looks similar to this:
 
 ```{r, echo=F}
 n <- 16 # number of teams
@@ -668,7 +668,7 @@ We are interested in analyzing the differences in the prior and posterior distri
 
 ### Bayesian Results
 
-We are interested in analyzing the differences in the prior and posterior distributions of the number of wins of each team. We will investigate how different results in early rounds affect an entire bracket. For these simulations, we will be using the same matchup matrix (generated from Normal powers) and the tournament seeding structure for 16 teams. Theoretically, you could apply these techniques to any bracket, but keeping this strucutre allows us to observe more concrete differences. The different results we will investigate are:
+We are interested in analyzing the differences in the prior and posterior distributions of the number of wins of each team. We will investigate how different results in early rounds affect an entire bracket. For these simulations, we will be using the same matchup matrix (generated from Normal powers) and the tournament seeding structure for 16 teams. Theoretically, you could apply these techniques to any bracket, but keeping this structure allows us to observe more concrete differences. The different results we will investigate are:
 
 1. The favorite (or higher seeded team) wins in the first round
 2. The underdog (or lower seeded team) wins in the first round
@@ -814,11 +814,11 @@ t <- tournament_seeding(n) # tournament seeding
 
 In general, we are interested in studying how changing the parameters of the team power distribution would affect the tournament outcome. In this report, we demonstrate this type of study with the specific question: how do the parameters affect the probability that the strongest team wins?
 
-We consider teams 1 to 8 (team 1 being the strongest). For each parameter setting, we simulate the tournament 1000 times using random seeding, and accordingly obtain a vector of 1000 winner team indices. To reduce the influence of chance in generating a particular cross-team winning probability matrix, we regenerate it and also update the seeding in each simulation. We use the portion of 1 in the vector as the estimator. We use Bootstrap to get a distribution of this estimator.
+We consider teams 1 to 8 (team 1 being the strongest). For each parameter setting, we simulate the tournament 1000 times using random seeding, and accordingly obtain a vector of 1000 winner team indices. To reduce the influence of chance in generating a particular cross-team winning probability matrix, we regenerate it and also update the seeding in each simulation. We use the proportion of tournament wins by team 1 as the estimator. We use Bootstrap to get a distribution of this estimator.
 
-We compared the resulting distribution for various $\mu$ and $\sigma$ values in Normal distribution, various $\alpha$ values in Gamma distribution, and various $\lambda$ values in Exponential distribution. Our results can be summarized in the box plot below, and their interpretations are provided in the “Discussion” section.
+We compared the resulting distribution for various $\mu$ and $\sigma$ values in Normal distribution, various $\alpha$ values in Gamma distribution, and various $\lambda$ values in Exponential distribution. Our results can be summarized in the box plot below, and their interpretations are provided in the [Discussion] section.
 
-```{r, echo=FALSE, out.width = "50%", fig.pos="h", fig.align="center", fig.cap="Figure 3"}
+```{r, echo=FALSE, fig.pos="h", fig.align="center"}
 ## Results
 getWinners = function(results) {
     winnerList = c()
@@ -1159,9 +1159,9 @@ title("Probability that the strongest team wins")
 
 Like parameter analysis, we are also interested in studying how different seeding options would affect the tournament outcome, and in particular the probability that the strongest team wins. 
 
-We use the same bootstrap procedure as described in the parameter analysis section. We compared the resulting distribution for random seeding, tournament seeding, and left skewed seeding. Likewise, our results can be summarized in the box plot below, and their interpretations are provided in the “Discussion” section.
+We use the same bootstrap procedure as described in the parameter analysis section. We compared the resulting distribution for random seeding, tournament seeding, and left skewed seeding. Likewise, our results can be summarized in the box plot below, and their interpretations are provided in the [Discussion] section.
 
-```{r, echo=FALSE, out.width = "50%", fig.pos="h", fig.align="center", fig.cap="Figure 4"}
+```{r, echo=FALSE, fig.pos="h", fig.align="center"}
 # Random seeding
 genSeeds <- function() {
     return(random_seeding(numTeams))
