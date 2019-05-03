@@ -565,7 +565,7 @@ We first generate the team powers using random number generation techniques. For
 
 With the generated team powers, we then generate the cross-team winning probabilities. Given $n$, the number of teams, we generate $M_{n\times n} = \{m_{ij}\;|\;0\leq i,j\leq n\}$, an $n\times n$ matrix where $m_{ij}$ is the probability of team $i$ beating team $j$. We enforce the constraint that $m_{ij} = 1 - m_{ji}$, since team $i$ can either win or lose against team $j$. Specifically, based on the team powers, we define $m_{ij} = \mathbb{P}(i \text{ wins } j) = \operatorname{power}[i] / (\operatorname{power}[i] + \operatorname{power}[j])$.
 
-We will utilize the various data generation methods to study how changing the parameters of the team power distribution, as well as the seeding method, would affect the tournament outcome. Examples of such studies are provided in the [Results] section below.
+We will utilize the various data generation methods to study how changing the parameters of the team power distribution, as well as the seeding method, would affect the tournament outcome. Examples of such studies are provided in the [Parameter Analysis via Resampling] section below. To see data generation code, go to the [Appendix] in section [Data Generation Functions].
 
 Additionally, we have looked up some actual game histories and calculated the actual cross-team winning probabilities, as described below.
 
@@ -607,15 +607,7 @@ mlbM <- allwin/alltotal
 dimnames(alltotal) <- dimnames(mlbM) <- list(levels(gl$vteam),levels(gl$vteam))
 ```
 
-The dataset we are using has a total of $`r nrow(gl)`$ games. We can see one main problem here is although we have this many games in record, many teams do not have many chances to play some other teams. This is because each team basically plays in one of two seperate leagues (NL and AL) and seperate regions during the season, and most of games happen within one region and one league. So we have many records of some teams vs some teams, but less for other teams. In short, this dataset is highly unbalanced. Further discussion about this problem can be found in [Results]. 
-
-```{r}
-#total possible combination of team vs team without considering visiting and home team
-30^2/2
-#number of (team vs team) game log with less than 10 game logs in record
-sum(alltotal<10)/2
-```
-
+The dataset we are using has a total of $`r nrow(gl)`$ games. We can see one main problem here is although we have this many games in record, many teams do not have many chances to play some other teams. This is because each team basically plays in one of two seperate leagues (NL and AL) and seperate regions during the season, and most of games happen within one region and one league. So we have many records of some teams vs some teams, but less for other teams. In short, this dataset is highly unbalanced. Further discussion about this problem can be found in [Results].
 
 ### Tournament Simulation
 
@@ -634,8 +626,6 @@ The algorithm for simulating a single bracketed tournament can be seen in the ap
 3. Return the winner of the tournament and a vector of integers representing the number of wins each team had.  
 
 We then get our Monte Carlo simulation results in the form of a 2-D array by using `replicate` on our tournament simulation function.  
-
-
 
 ### Bayesian Analysis
 
