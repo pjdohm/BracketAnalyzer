@@ -560,6 +560,61 @@ Our problem of interest consists of discovering the most likely bracket outcome 
 
 ## Methods
 
+### Data Generation
+We first generate the team powers using random number generation techniques. For each team, its power is a positive real number that represents its intrinsic strength. We wrote general function for the inverse CDF and the Accept-Reject methods. In the report, we demonstrate how to use our inverse CDF function to generate a family of Exponential distributions, and how to use our Accept-Reject function to generate a family of Gamma distributions, each under various parameters. We also included a family of Normal distributions as examples of standard distributions, which we construct by calling library routines. We assign the team indices from the strongest team (team-1) to the weakest team (team-n).
+
+With the generated team powers, we then generate the cross-team winning probabilities. Given n, the number of teams, we generate $M_{n\times n} = \{m_{ij}\;|\;0\leq i,j\leq n\}$, an $n\times n$ matrix where $m_{ij}$ is the probability of team-i beating team-j. We enforce the constraint that $m_{ij} = 1 - m_{ji}$, since team-i can either win or lose against team-j. Specifically, based on the team powers, we define $m_{ij} = \mathbb{P}(i \text{ wins } j) = \operatorname{power}[i] / (\operatorname{power}[i] + \operatorname{power}[j])$.
+
+Additionally, we look up some actual game histories and calculate the actual cross-team winning probabilities. (Ziqin may want to write about this part.)
+
+#### MLB Game Logs data
+
+Major League Baseball (MLB) is the oldest and largest professional baseball organization in U.S and Canada. It has 30 teams playing in 2 major leagues: National League (NL) and American League (AL). NL and AL were seperate legal entitles formed in 1876 and 1901 respectilvely, and they cooperated to found MLB in 1903.  We obtain free MLB game logs from www.retrosheet.org. Since game statistics are highly time-sensitive (a strong team may lose its dominance in 1 season), we use recent 3 years' game log (2016, 2017 and 2018) to build the winning probability matrix $M$.
+
+```{r}
+gl16 <- read.csv("mlb/mlb_data/GL2016.TXT",header = F)[,c(4,5,10,7,8,11)]
+gl17 <- read.csv("mlb/mlb_data/GL2017.TXT",header = F)[,c(4,5,10,7,8,11)]
+gl18 <- read.csv("mlb/mlb_data/GL2018.TXT",header = F)[,c(4,5,10,7,8,11)]
+gl <- rbind(gl16,gl17,gl18)
+colnames(gl) <- c('vteam','vleague','vscore','hteam','hleague','hscore')
+#winning probability of visiting teams, where rows are visiting teams and 
+#cols are home teams.
+#For example (ANAv,CHAh) means the avg probability of ANA winning CHA as a 
+#visiting team. This also means the avg probability of CHA losing or drawing
+#ANA as a home team (P(lose|draw) = 1-P(win))
+#NaN means there's no game records for 2 teams 
+win <- lose <- draw <- matrix(0,30,30,dimnames = 
+         list(paste0(levels(gl$vteam),'v'),paste0(levels(gl$vteam),'h')))
+for(i in 1:nrow(gl)){
+  if(gl[i,3]>gl[i,6])
+    win[gl$vteam[i],gl$hteam[i]] = win[gl$vteam[i],gl$hteam[i]]+1
+  else if(gl[i,3]<gl[i,6])
+    lose[gl$vteam[i],gl$hteam[i]] = lose[gl$vteam[i],gl$hteam[i]]+1
+  else
+    draw[gl$vteam[i],gl$hteam[i]] = draw[gl$vteam[i],gl$hteam[i]]+1
+}
+total <- win+lose+draw
+alltotal <- total*upper.tri(total) + t(total)*upper.tri(total)
+alltotal <- alltotal+t(alltotal)
+allwin <- win*upper.tri(win) + t(lose)*upper.tri(win) +
+  win*lower.tri(win) + t(lose)*lower.tri(lose)
+#avg winnning prob not considering visiting & home
+#For example (ANA,CHA) means the avg probability of ANA winning CHA
+#This matrix could be used directly in sim_tournament_initial.R
+mlbM <- allwin/alltotal
+dimnames(alltotal) <- dimnames(mlbM) <- list(levels(gl$vteam),levels(gl$vteam))
+```
+
+The dataset (game logs in recent 3 years) has a total of $`r nrow(gl)`$ games in record. We can see one main problem here is although we have this many games in record. Many team does not have many chances to play some other teams. This is because teams basically play in seperate leagues (NL and AL) and seperate region in season, and most of games happen within one region and one league. So we have many records of some teams vs some teams, but less for other teams. In short, this dataset is highly unbalanced. 
+
+```{r}
+#total possible combination of team vs team without considering visiting and home team
+30^2/2
+#number of (team vs team) game log with less than 10 game logs in record
+sum(alltotal<10)/2
+```
+
+
 ### Tournament Simulation
 
 The first step of simulating a tournament is providing each team with a seed. A seed defines where in the bracket each team will be placed, and usually stronger teams get lower seed numbers while weaker teams get higher seed numbers. The results of the tournament can be greatly affected by how the tournament is seeded, and because of this, we have created three different kinds of seeding functions that are defined in the [Appendix] at section [Seeding Functions]. The most notable seeding function is `tournament_seeding` which generates a bracket layout that is quite common in traditional real world tournaments where the structure is set up in such a way that seed 1 and seed 2 are most likely to be finalists in the last tournament matchup.  
@@ -614,6 +669,10 @@ We are interested in analyzing the differences in the prior and posterior distri
 1. The favorite (or higher seeded team) wins in the first round
 2. The underdog (or lower seeded team) wins in the first round
 3. One of the top seeds (1-4) is upset by the lower seeded team (13-16), and all other games remain the same.
+
+### Bayesian Analysis
+
+
 
 -----
 
@@ -752,6 +811,17 @@ for (i in 1:16) {
          xlab="Wins", ylab="Probability", main=titles[i])
     lines(priorProb~wins, data=df, lty=2)
 }
+```
+
+
+### Resampling Results
+
+```{r}
+# setup
+n <- 16 # number of teams
+set.seed(1) # for consistency
+M <- genCrossTeamWinningProbabilities(genNormalPowers(n)) # matchups
+t <- tournament_seeding(n) # tournament seeding
 ```
 
 -----
