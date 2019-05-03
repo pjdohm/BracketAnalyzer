@@ -656,7 +656,7 @@ bFav[[1]]
 
 Note: we have one of these data frames for every team in the tournament. We can use this information to plot prior and posterior distributions for each team, and analyze the differences. Additionally, we can obtain approximations of each teams expected number of wins and the standard error of that estimate; however, we are more interested in the distributions since they provide more insight into a team's difference in performance. Our distributions look similar to the following, where the dashed line represents the prior distribution and the solid line represents the posterior distribution.
 
-```{r, echo=F}
+```{r, echo=F, out.width = "50%", fig.align="center"}
 df <- bFav[[1]]
 titles <- paste("Prior vs. Posterior for Team", 1:16)
 plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
@@ -670,15 +670,9 @@ We are interested in analyzing the differences in the prior and posterior distri
 2. The underdog (or lower seeded team) wins in the first round
 3. One of the top seeds (1-4) is upset by the lower seeded team (13-16), and all other games remain the same.
 
-### Bayesian Analysis
-
-
-
 -----
 
 ## Results
-
-
 
 ### Bayesian Results
 
@@ -705,8 +699,8 @@ t <- tournament_seeding(n) # tournament seeding
 # what if favorite wins every game
 tFav <- t[which(t <= n/2)]
 bFav <- bayesianTeam(t, tFav, M)
-titles <- paste("Prior vs. Posterior for Team", 1:16)
-par(mfrow=c(2,2))
+titles <- paste("Bayesian Team", 1:16)
+par(mfrow=c(2,4))
 for (i in 1:8) {
     df <- bFav[[i]]
     plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
@@ -723,8 +717,8 @@ We will plot the win distributions for all of the underdog teams (seeds 9-16), g
 # what if underdog wins every game
 tUD <- t[which(t > n/2)]
 bUpset <- bayesianTeam(t, tUD, M)
-titles <- paste("Prior vs. Posterior for Team", 1:16)
-par(mfrow=c(2,2))
+titles <- paste("Bayesian Team", 1:16)
+par(mfrow=c(2,4))
 for (i in 9:16) {
     df <- bUpset[[i]]
     plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
@@ -746,8 +740,8 @@ We will plot the win distributions for all teams, given that the 16 seed beats t
 t1L <- t
 t1L[1] <- 16
 b1L <- bayesianTeam(t, t1L, M)
-titles <- paste("Prior vs. Posterior for Team", 1:16)
-par(mfrow=c(2,2))
+titles <- paste("Bayesian Team", 1:16)
+par(mfrow=c(2,4))
 for (i in 1:16) {
     df <- b1L[[i]]
     plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
@@ -765,8 +759,8 @@ We will plot the win distributions for all teams, given that the 15 seed beats t
 t2L <- t
 t2L[9] <- 15
 b2L <- bayesianTeam(t, t2L, M)
-titles <- paste("Prior vs. Posterior for Team", 1:16)
-par(mfrow=c(2,2))
+titles <- paste("Bayesian Team", 1:16)
+par(mfrow=c(2,4))
 for (i in 1:16) {
     df <- b2L[[i]]
     plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
@@ -784,8 +778,8 @@ We will plot the win distributions for all teams, given that the 14 seed beats t
 t3L <- t
 t3L[13] <- 14
 b3L <- bayesianTeam(t, t3L, M)
-titles <- paste("Prior vs. Posterior for Team", 1:16)
-par(mfrow=c(2,2))
+titles <- paste("Bayesian Team", 1:16)
+par(mfrow=c(2,4))
 for (i in 1:16) {
     df <- b3L[[i]]
     plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
@@ -803,8 +797,8 @@ We will plot the win distributions for all teams, given that the 13 seed beats t
 t4L <- t
 t4L[5] <- 13
 b4L <- bayesianTeam(t, t4L, M)
-titles <- paste("Prior vs. Posterior for Team", 1:16)
-par(mfrow=c(2,2))
+titles <- paste("Bayesian Team", 1:16)
+par(mfrow=c(2,4))
 for (i in 1:16) {
     df <- b4L[[i]]
     plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
@@ -1781,8 +1775,8 @@ t <- tournament_seeding(n) # tournament seeding
 # what if favorite wins every game
 tFav <- t[which(t <= n/2)]
 bFav <- bayesianTeam(t, tFav, M)
-titles <- paste("Prior vs. Posterior for Team", 1:16)
-par(mfrow=c(2,2))
+titles <- paste("Bayesian Team", 1:16)
+par(mfrow=c(2,4))
 for (i in 1:8) {
     df <- bFav[[i]]
     plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
@@ -1793,8 +1787,8 @@ for (i in 1:8) {
 # what if underdog wins every game
 tUD <- t[which(t > n/2)]
 bUpset <- bayesianTeam(t, tUD, M)
-titles <- paste("Prior vs. Posterior for Team", 1:16)
-par(mfrow=c(2,2))
+titles <- paste("Bayesian Team", 1:16)
+par(mfrow=c(2,4))
 for (i in 9:16) {
     df <- bUpset[[i]]
     plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
@@ -1806,8 +1800,8 @@ for (i in 9:16) {
 t1L <- t
 t1L[1] <- 16
 b1L <- bayesianTeam(t, t1L, M)
-titles <- paste("Prior vs. Posterior for Team", 1:16)
-par(mfrow=c(2,2))
+titles <- paste("Bayesian Team", 1:16)
+par(mfrow=c(2,4))
 for (i in 1:16) {
     df <- b1L[[i]]
     plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
@@ -1819,8 +1813,8 @@ for (i in 1:16) {
 t2L <- t
 t2L[2] <- 15
 b2L <- bayesianTeam(t, t2L, M)
-titles <- paste("Prior vs. Posterior for Team", 1:16)
-par(mfrow=c(2,2))
+titles <- paste("Bayesian Team", 1:16)
+par(mfrow=c(2,4))
 for (i in 1:16) {
     df <- b2L[[i]]
     plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
@@ -1832,8 +1826,8 @@ for (i in 1:16) {
 t3L <- t
 t3L[3] <- 14
 b3L <- bayesianTeam(t, t3L, M)
-titles <- paste("Prior vs. Posterior for Team", 1:16)
-par(mfrow=c(2,2))
+titles <- paste("Bayesian Team", 1:16)
+par(mfrow=c(2,4))
 for (i in 1:16) {
     df <- b3L[[i]]
     plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1) lty=1,
@@ -1845,8 +1839,8 @@ for (i in 1:16) {
 t4L <- t
 t4L[4] <- 13
 b4L <- bayesianTeam(t, t4L, M)
-titles <- paste("Prior vs. Posterior for Team", 1:16)
-par(mfrow=c(2,2))
+titles <- paste("Bayesian Team", 1:16)
+par(mfrow=c(2,4))
 for (i in 1:16) {
     df <- b4L[[i]]
     plot(postProb~wins, data=df, type='l', xlim=c(0,nRounds), ylim=c(0,1), lty=1,
