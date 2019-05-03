@@ -832,8 +832,341 @@ We consider teams 1 to 8 (team 1 being the strongest). For each parameter settin
 
 We compared the resulting distribution for various $\mu$ and $\sigma$ values in Normal distribution, various $\alpha$ values in Gamma distribution, and various $\lambda$ values in Exponential distribution. Our results can be summarized in the box plot below, and their interpretations are provided in the “Discussion” section.
 
-```{r, echo=FALSE, out.width = "50%", fig.pos="h", fig.align="center", fig.cap="Figure 2"}
-include_graphics("resample/param_analysis_box_plot.png")
+```{r, echo=FALSE, out.width = "50%", fig.pos="h", fig.align="center", fig.cap="Figure 3"}
+## Results
+getWinners = function(results) {
+    winnerList = c()
+    for(i in 1:(length(results) / 2)){
+        winnerList = c(winnerList,results[,i]$Winner)
+    }
+    return(winnerList)
+}
+
+# Re-generate Team Powers and Cross-Team Winning Probabilities before each simulation
+simTournamentRegenerateSeedsAndProbs <- function(genSeeds, genProbs) {
+    bracket <- genSeeds()
+    matchups <- genProbs()
+    return(simTournament(bracket, matchups))
+}
+
+## $\mu$ in Normal
+numTeams = 8
+nSim = 1000
+
+# Normal(1, 1) team powers
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams, mean=1)))
+}
+
+norm_11_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+norm_11_winners = getWinners(norm_11_results)
+norm_11_boot_res <- boot_replicate(
+    norm_11_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Normal(3, 1) team powers
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams, mean=3)))
+}
+
+norm_31_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+norm_31_winners = getWinners(norm_31_results)
+norm_31_boot_res <- boot_replicate(
+    norm_31_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Normal(9, 1) team powers
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams, mean=9)))
+}
+
+norm_91_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+norm_91_winners = getWinners(norm_91_results)
+norm_91_boot_res <- boot_replicate(
+    norm_91_winners,
+    estimator=function(x) mean(x==1)
+)
+
+## $\sigma$ in Normal
+# Normal(9, 1) team powers
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams, mean=9, sd=1)))
+}
+
+norm_91_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+norm_91_winners = getWinners(norm_91_results)
+norm_91_boot_res <- boot_replicate(
+    norm_91_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Normal(9, 3) team powers
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams, mean=9, sd=3)))
+}
+
+norm_93_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+norm_93_winners = getWinners(norm_93_results)
+norm_93_boot_res <- boot_replicate(
+    norm_93_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Normal(9, 5) team powers
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams, mean=9, sd=5)))
+}
+
+norm_95_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+norm_95_winners = getWinners(norm_95_results)
+norm_95_boot_res <- boot_replicate(
+    norm_95_winners,
+    estimator=function(x) mean(x==1)
+)
+
+## $\alpha$ in Gamma($\alpha$, $\beta$)
+gammaPDF <- function(x, a, b) {
+    return(b^a / gamma(a) * x^(a-1) * exp(-b*x))
+}
+
+# Gamma(2,2) team powers
+f <- function(x) {
+    return(gammaPDF(x, 2, 2))
+}
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(
+        genCrossTeamWinningProbabilities(
+         acceptReject(numTeams, f, 0, 25, 0.2)
+        )
+    ))
+}
+
+gamma_22_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+gamma_22_winners = getWinners(gamma_22_results)
+gamma_22_boot_res <- boot_replicate(
+    gamma_22_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Gamma(3,2) team powers
+f <- function(x) {
+    return(gammaPDF(x, 3, 2))
+}
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(
+        genCrossTeamWinningProbabilities(
+         acceptReject(numTeams, f, 0, 25, 0.2)
+        )
+    ))
+}
+
+gamma_32_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+gamma_32_winners = getWinners(gamma_32_results)
+gamma_32_boot_res <- boot_replicate(
+    gamma_32_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Gamma(4,2) team powers
+f <- function(x) {
+    return(gammaPDF(x, 4, 2))
+}
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(
+        genCrossTeamWinningProbabilities(
+         acceptReject(numTeams, f, 0, 25, 0.2)
+        )
+    ))
+}
+
+gamma_42_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+gamma_42_winners = getWinners(gamma_42_results)
+gamma_42_boot_res <- boot_replicate(
+    gamma_42_winners,
+    estimator=function(x) mean(x==1)
+)
+
+## $\lambda$ in Exponential($\lambda$)
+# Exponential(1) team powers
+inv_cdf <- function(x) {return(-log(x) / 1)}
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(
+        genCrossTeamWinningProbabilities(
+         inverseCDF(
+            numTeams, 
+            inv_cdf
+          )
+        )
+    ))
+}
+
+exp_1_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+exp_1_winners = getWinners(exp_1_results)
+exp_1_boot_res <- boot_replicate(
+    exp_1_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Exponential(2) team powers
+inv_cdf <- function(x) {return(-log(x) / 2)}
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(
+        genCrossTeamWinningProbabilities(
+         inverseCDF(
+            numTeams, 
+            inv_cdf
+          )
+        )
+    ))
+}
+
+exp_2_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+exp_2_winners = getWinners(exp_2_results)
+exp_2_boot_res <- boot_replicate(
+    exp_2_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Exponential(3) team powers
+inv_cdf <- function(x) {return(-log(x) / 3)}
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(
+        genCrossTeamWinningProbabilities(
+         inverseCDF(
+            numTeams, 
+            inv_cdf
+          )
+        )
+    ))
+}
+
+exp_3_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+exp_3_winners = getWinners(exp_3_results)
+exp_3_boot_res <- boot_replicate(
+    exp_3_winners,
+    estimator=function(x) mean(x==1)
+)
+
+## Combining the plots
+par(mfrow=c(2,2))
+
+boxplot(
+    norm_11_boot_res$boot,
+    norm_31_boot_res$boot,
+    norm_91_boot_res$boot,
+    names=c("N(1,1)", "N(3,1)", "N(9,1)")
+)
+title("Probability that the strongest team wins")
+
+boxplot(
+    norm_91_boot_res$boot,
+    norm_93_boot_res$boot,
+    norm_95_boot_res$boot,
+    names=c("N(9,1)", "N(9,3)", "N(9,5)")
+)
+title("Probability that the strongest team wins")
+
+boxplot(
+    gamma_22_boot_res$boot,
+    gamma_32_boot_res$boot,
+    gamma_42_boot_res$boot,
+    names=c("G(2,2)", "G(3,2)", "G(4,2)")
+)
+title("Probability that the strongest team wins")
+
+boxplot(
+    exp_1_boot_res$boot,
+    exp_2_boot_res$boot,
+    exp_3_boot_res$boot,
+    names=c("Exp(1)", "Exp(2)", "Exp(3)")
+)
+title("Probability that the strongest team wins")
 ```
 
 ### Seeding Effect Analysis via Resampling
@@ -842,8 +1175,72 @@ Like parameter analysis, we are also interested in studying how different seedin
 
 We use the same bootstrap procedure as described in the parameter analysis section. We compared the resulting distribution for random seeding, tournament seeding, and left skewed seeding. Likewise, our results can be summarized in the box plot below, and their interpretations are provided in the “Discussion” section.
 
-```{r, echo=FALSE, out.width = "50%", fig.pos="h", fig.align="center", fig.cap="Figure 2"}
-include_graphics("resample/seeding_effect_box_plot.png")
+```{r, echo=FALSE, out.width = "50%", fig.pos="h", fig.align="center", fig.cap="Figure 4"}
+# Random seeding
+genSeeds <- function() {
+    return(random_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams)))
+}
+
+random_seeding_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+random_seeding_winners = getWinners(random_seeding_results)
+random_seeding_boot_res <- boot_replicate(
+    random_seeding_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Tournament seeding
+genSeeds <- function() {
+    return(tournament_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams)))
+}
+
+tournament_seeding_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+tournament_seeding_winners = getWinners(tournament_seeding_results)
+tournament_seeding_boot_res <- boot_replicate(
+    tournament_seeding_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Left skewed seeding
+genSeeds <- function() {
+    return(left_skewed_seeding(numTeams))
+}
+genProbs <- function() {
+    return(genCrossTeamWinningProbabilities(genNormalPowers(numTeams)))
+}
+
+left_skewed_seeding_results = replicate(
+    nSim, 
+    simTournamentRegenerateSeedsAndProbs(genSeeds, genProbs), 
+    simplify="array"
+)
+left_skewed_seeding_winners = getWinners(left_skewed_seeding_results)
+left_skewed_seeding_boot_res <- boot_replicate(
+    left_skewed_seeding_winners,
+    estimator=function(x) mean(x==1)
+)
+
+# Box plots
+boxplot(
+    random_seeding_boot_res$boot,
+    tournament_seeding_boot_res$boot,
+    left_skewed_seeding_boot_res$boot,
+    names=c("Random seeding", "Tournament seeding", "Left skewed seeding")
+)
+title("Probability that the strongest team wins")
 ```
 
 -----
