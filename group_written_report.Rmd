@@ -561,15 +561,15 @@ Our problem of interest consists of discovering the most likely bracket outcome 
 ## Methods
 
 ### Data Generation
-We first generate the team powers using random number generation techniques. For each team, its power is a positive real number that represents its intrinsic strength. We wrote general function for the inverse CDF and the Accept-Reject methods. In the report, we demonstrate how to use our inverse CDF function to generate a family of Exponential distributions, and how to use our Accept-Reject function to generate a family of Gamma distributions, each under various parameters. We also included a family of Normal distributions as examples of standard distributions, which we construct by calling library routines. We assign the team indices from the strongest team (team-1) to the weakest team (team-n).
+We first generate the team powers using random number generation techniques. For each team, its power is a positive real number that represents its intrinsic strength. We wrote general functions for the inverse CDF and the Accept-Reject methods. In the report, we demonstrate how to use our inverse CDF function to generate a family of Exponential distributions, and how to use our Accept-Reject function to generate a family of Gamma distributions, each under various parameters. We also included a family of Normal distributions as examples of standard distributions, which we construct by calling library routines. We assign the team indices from the strongest team (team 1) to the weakest team (team n).
 
-With the generated team powers, we then generate the cross-team winning probabilities. Given n, the number of teams, we generate $M_{n\times n} = \{m_{ij}\;|\;0\leq i,j\leq n\}$, an $n\times n$ matrix where $m_{ij}$ is the probability of team-i beating team-j. We enforce the constraint that $m_{ij} = 1 - m_{ji}$, since team-i can either win or lose against team-j. Specifically, based on the team powers, we define $m_{ij} = \mathbb{P}(i \text{ wins } j) = \operatorname{power}[i] / (\operatorname{power}[i] + \operatorname{power}[j])$.
+With the generated team powers, we then generate the cross-team winning probabilities. Given $n$, the number of teams, we generate $M_{n\times n} = \{m_{ij}\;|\;0\leq i,j\leq n\}$, an $n\times n$ matrix where $m_{ij}$ is the probability of team $i$ beating team $j$. We enforce the constraint that $m_{ij} = 1 - m_{ji}$, since team $i$ can either win or lose against team $j$. Specifically, based on the team powers, we define $m_{ij} = \mathbb{P}(i \text{ wins } j) = \operatorname{power}[i] / (\operatorname{power}[i] + \operatorname{power}[j])$.
 
-Additionally, we look up some actual game histories and calculate the actual cross-team winning probabilities, as described below.
+Additionally, we have looked up some actual game histories and calculated the actual cross-team winning probabilities, as described below.
 
 #### MLB Game Logs data
 
-Major League Baseball (MLB) is the oldest and largest professional baseball organization in U.S and Canada. It has 30 teams playing in 2 major leagues: National League (NL) and American League (AL). NL and AL were seperate legal entitles formed in 1876 and 1901 respectilvely, and they cooperated to found MLB in 1903.  We obtain free MLB game logs from www.retrosheet.org. Since game statistics are highly time-sensitive (a strong team may lose its dominance in 1 season), we use recent 3 years' game log (2016, 2017 and 2018) to build the winning probability matrix $M$. 
+Major League Baseball (MLB) is the oldest and largest professional baseball organization in U.S and Canada. It has 30 teams playing in 2 major leagues: National League (NL) and American League (AL). NL and AL were seperate legal entitles formed in 1876 and 1901 respectively, and they cooperated to found MLB in 1903.  We obtained free MLB game logs from [Retrosheet](www.retrosheet.org). Since game statistics are highly time-sensitive (a strong team may lose its dominance in 1 season), we use recent 3 years' game log (2016, 2017 and 2018) to build the winning probability matrix $M$. 
 
 ```{r, echo=F}
 gl16 <- read.csv("mlb/mlb_data/GL2016.TXT",header = F)[,c(4,5,10,7,8,11)]
@@ -605,7 +605,7 @@ mlbM <- allwin/alltotal
 dimnames(alltotal) <- dimnames(mlbM) <- list(levels(gl$vteam),levels(gl$vteam))
 ```
 
-The dataset (game logs in recent 3 years) has a total of $`r nrow(gl)`$ games in record. We can see one main problem here is although we have this many games in record. Many team does not have many chances to play some other teams. This is because teams basically play in seperate leagues (NL and AL) and seperate region in season, and most of games happen within one region and one league. So we have many records of some teams vs some teams, but less for other teams. In short, this dataset is highly unbalanced. Further discussion about this problem can be found in [Results]. 
+The dataset we are using has a total of $`r nrow(gl)`$ games. We can see one main problem here is although we have this many games in record, many teams do not have many chances to play some other teams. This is because each team basically plays in one of two seperate leagues (NL and AL) and seperate regions during the season, and most of games happen within one region and one league. So we have many records of some teams vs some teams, but less for other teams. In short, this dataset is highly unbalanced. Further discussion about this problem can be found in [Results]. 
 
 ```{r}
 #total possible combination of team vs team without considering visiting and home team
