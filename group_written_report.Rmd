@@ -565,7 +565,7 @@ We first generate the team powers using random number generation techniques. For
 
 With the generated team powers, we then generate the cross-team winning probabilities. Given n, the number of teams, we generate $M_{n\times n} = \{m_{ij}\;|\;0\leq i,j\leq n\}$, an $n\times n$ matrix where $m_{ij}$ is the probability of team-i beating team-j. We enforce the constraint that $m_{ij} = 1 - m_{ji}$, since team-i can either win or lose against team-j. Specifically, based on the team powers, we define $m_{ij} = \mathbb{P}(i \text{ wins } j) = \operatorname{power}[i] / (\operatorname{power}[i] + \operatorname{power}[j])$.
 
-Additionally, we look up some actual game histories and calculate the actual cross-team winning probabilities. (Ziqin may want to write about this part.)
+Additionally, we look up some actual game histories and calculate the actual cross-team winning probabilities, as described below.
 
 #### MLB Game Logs data
 
@@ -824,6 +824,28 @@ M <- genCrossTeamWinningProbabilities(genNormalPowers(n)) # matchups
 t <- tournament_seeding(n) # tournament seeding
 ```
 
+### Parameter Analysis via Resampling
+
+In general, we are interested in studying how changing the parameters of the team power distribution would affect the tournament outcome. In this report, we demonstrate this type of study with the specific question: how do the parameters affect the probability that the strongest team wins?
+
+We consider teams 1 to 8 (team 1 being the strongest). For each parameter setting, we simulate the tournament 1000 times using random seeding, and accordingly obtain a vector of 1000 winner team indices. To reduce the influence of chance in generating a particular cross-team winning probability matrix, we regenerate it and also update the seeding in each simulation. We use the portion of 1 in the vector as the estimator. We use Bootstrap to get a distribution of this estimator.
+
+We compared the resulting distribution for various $\mu$ and $\sigma$ values in Normal distribution, various $\alpha$ values in Gamma distribution, and various $\lambda$ values in Exponential distribution. Our results can be summarized in the box plot below, and their interpretations are provided in the “Discussion” section.
+
+```{r, echo=FALSE, out.width = "50%", fig.pos="h", fig.align="center", fig.cap="Figure 2"}
+include_graphics("resample/param_analysis_box_plot.png")
+```
+
+### Seeding Effect Analysis via Resampling
+
+Like parameter analysis, we are also interested in studying how different seeding options would affect the tournament outcome, and in particular the probability that the strongest team wins. 
+
+We use the same bootstrap procedure as described in the parameter analysis section. We compared the resulting distribution for random seeding, tournament seeding, and left skewed seeding. Likewise, our results can be summarized in the box plot below, and their interpretations are provided in the “Discussion” section.
+
+```{r, echo=FALSE, out.width = "50%", fig.pos="h", fig.align="center", fig.cap="Figure 2"}
+include_graphics("resample/seeding_effect_box_plot.png")
+```
+
 -----
 
 ## Discussion
@@ -872,6 +894,17 @@ Moving forward in the bracket, the impact is larger on "local" teams than "nonlo
 In some cases (e.g. Team 13 when Team 3 is upset by Team 14), there is almost no difference in the prior and posterior distribtuions. This is because these teams are unlikely to progress far enough in the tournament to take advantage of a higher seed missing.
 
 Overall, we can say that the impact of an upset is highest on the prior and posterior distributions of a team is largest for the teams in the upset matchup, then for local teams who would play in the next round or two, and lowest for teams on the "other side" of the bracket (i.e. they would not meet until the final round).
+
+### Parameter Analysis via Resampling
+
+As shown in the box plot for parameter analysis above, for Normal distribution, controlling the standard deviation, as the mean increases, the team powers are more similar to each other. Hence the probability that the strongest team wins would decrease. In contrast, controlling the mean, as the standard deviation increases, the team powers are more different from each other. Hence the probability that the strongest team wins would increase.
+
+For Gamma distribution, controlling the rate parameter, as the shape parameter increases, the team powers are less right-skewed. And for Exponential distribution, as the rate parameter increases, the team powers are more right-skewed. However, skewness has complex effects on the probability that the strongest team wins. On one hand, the more right-skewed the team power distribution is, the more difference one could potentially observe between the power of the strongest team and that of the other teams. That is, if the strongest team has power at the right tail, then it would have a high probability of winning. On the other hand, the more right-skewed the team power distribution is, the less likely a team could possess power very far in the right end. That is, if the strongest team has power not too far away from the other teams, then it would have a moderate probability of winning. So there is a trade-off between potential and likelihood in analyzing how the skewness of team power distribution would affect the probability that the strongest team wins.
+
+### Seeding Effect Analysis via Resampling
+
+As shown in the box plot for seeding effect analysis above, both Tournament Seeding and Left-skewed Seeding increase the chances that the stronger teams win the tournament.
+
 
 -----
 
