@@ -800,15 +800,68 @@ for (i in 1:16) {
 ```
 
 
-### Resampling on Rank of Teams
+### Team Power Estimation via Resampling
+From the tournament results we generated, we have several possible estimator to estimate the real team power. We can use Bootstrap resampling to get more information about that estimator. 
 
-```{r}
+#### Team Power Estimated by average Team Ranks
+One obvious estimator is the average team rank of each team. Here we generate team power using default `genNormalPowers(n)`, a generic function to generate normal variates. 
+
+##### Random seeding
+We first try using random seeding for every tournament simulation. The boxplot below is the result we have. We can see for some teams with similar team power, their average ranks are very close. And sometimes the team with lower team power actually have higher mean rank (but the confidence intervals are highly overlapped). 
+```{r, echo=F}
 # setup
+nSim <- 1000 # numer of simulations
 n <- 16 # number of teams
 set.seed(1) # for consistency
-M <- genCrossTeamWinningProbabilities(genNormalPowers(n)) # matchups
-t <- tournament_seeding(n) # tournament seeding
+power <- genNormalPowers(n)
+M <- genCrossTeamWinningProbabilities(power) # matchups
+#with random seeding
+res = replicate(nSim, simTournament(
+  sample(1:n), M, rank = T),simplify = FALSE)
+#ranks of each team
+ranks <- lapply(1:n, getRank, res = res)
+#bootstrap estimation on mean of ranks of each team
+mean_boot <- lapply(ranks, boot_replicate)
+#a box plot of ranking of each team
+mean_boot_raw_r <- lapply(mean_boot, function(x) x$boot)
+
+boxplot(mean_boot_raw_r,horizontal = T,xlab = 'Mean rank',ylab = 'Team (ordered by team power)',
+        main = "Bootstrap estimated mean rank of each team with random seeding")
+xlim <- par("usr")[1:2]
+xrange = xlim[2] - xlim[1]
+powerrange <- power[1] - power[n]
+for(i in 1:n){
+  lines(c(xlim[2],xlim[2] - power[i]*(xrange/powerrange)),c(i,i), col = 'red')
+}
+mtext("Relative Real Team Power", side = 4, line = 1)
 ```
+
+##### Appropriate seeding
+Then we try using our seeding function to simulation the tournament. We can see in this case, the difference between teams increases. And the situation of team with lower team power having higher rank becomes less. Generally speaking, with appropriate seeding, average team rank represents the team power better. 
+```{r,echo=F}
+#With our seeding
+t <- tournament_seeding(n) # tournament seeding
+res = replicate(nSim, simTournament(
+  t, M, rank = T),simplify = FALSE)
+#ranks of each team
+ranks <- lapply(1:n, getRank, res = res)
+#bootstrap estimation on mean of ranks of each team
+mean_boot <- lapply(ranks, boot_replicate)
+#a box plot of ranking of each team
+mean_boot_raw_s <- lapply(mean_boot, function(x) x$boot)
+boxplot(mean_boot_raw_s,horizontal = T,xlab = 'Mean rank',ylab = 'Team (ordered by team power)',
+        main = "Bootstrap estimated mean rank of each team with random seeding")
+xlim <- par("usr")[1:2]
+xrange = xlim[2] - xlim[1]
+powerrange <- power[1] - power[n]
+for(i in 1:n){
+  lines(c(xlim[2],xlim[2] - power[i]*(xrange/powerrange)),c(i,i), col = 'red')
+}
+mtext("Relative Real Team Power", side = 4, line = 1)
+```
+
+#### Team Power Estimated by average Team Ranks
+
 
 ### Parameter Analysis via Resampling
 
