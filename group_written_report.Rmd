@@ -569,9 +569,9 @@ Additionally, we look up some actual game histories and calculate the actual cro
 
 #### MLB Game Logs data
 
-Major League Baseball (MLB) is the oldest and largest professional baseball organization in U.S and Canada. It has 30 teams playing in 2 major leagues: National League (NL) and American League (AL). NL and AL were seperate legal entitles formed in 1876 and 1901 respectilvely, and they cooperated to found MLB in 1903.  We obtain free MLB game logs from www.retrosheet.org. Since game statistics are highly time-sensitive (a strong team may lose its dominance in 1 season), we use recent 3 years' game log (2016, 2017 and 2018) to build the winning probability matrix $M$.
+Major League Baseball (MLB) is the oldest and largest professional baseball organization in U.S and Canada. It has 30 teams playing in 2 major leagues: National League (NL) and American League (AL). NL and AL were seperate legal entitles formed in 1876 and 1901 respectilvely, and they cooperated to found MLB in 1903.  We obtain free MLB game logs from www.retrosheet.org. Since game statistics are highly time-sensitive (a strong team may lose its dominance in 1 season), we use recent 3 years' game log (2016, 2017 and 2018) to build the winning probability matrix $M$. 
 
-```{r}
+```{r, echo=F}
 gl16 <- read.csv("mlb/mlb_data/GL2016.TXT",header = F)[,c(4,5,10,7,8,11)]
 gl17 <- read.csv("mlb/mlb_data/GL2017.TXT",header = F)[,c(4,5,10,7,8,11)]
 gl18 <- read.csv("mlb/mlb_data/GL2018.TXT",header = F)[,c(4,5,10,7,8,11)]
@@ -605,7 +605,7 @@ mlbM <- allwin/alltotal
 dimnames(alltotal) <- dimnames(mlbM) <- list(levels(gl$vteam),levels(gl$vteam))
 ```
 
-The dataset (game logs in recent 3 years) has a total of $`r nrow(gl)`$ games in record. We can see one main problem here is although we have this many games in record. Many team does not have many chances to play some other teams. This is because teams basically play in seperate leagues (NL and AL) and seperate region in season, and most of games happen within one region and one league. So we have many records of some teams vs some teams, but less for other teams. In short, this dataset is highly unbalanced. 
+The dataset (game logs in recent 3 years) has a total of $`r nrow(gl)`$ games in record. We can see one main problem here is although we have this many games in record. Many team does not have many chances to play some other teams. This is because teams basically play in seperate leagues (NL and AL) and seperate region in season, and most of games happen within one region and one league. So we have many records of some teams vs some teams, but less for other teams. In short, this dataset is highly unbalanced. Further discussion about this problem can be found in [Results]. 
 
 ```{r}
 #total possible combination of team vs team without considering visiting and home team
@@ -808,7 +808,7 @@ for (i in 1:16) {
 ```
 
 
-### Resampling Results
+### Resampling on Rank of Teams
 
 ```{r}
 # setup
