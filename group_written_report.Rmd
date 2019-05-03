@@ -890,7 +890,7 @@ mtext("Relative Real Team Power", side = 4, line = 1)
 
 ##### Tournament seeding
 
-Then we try using our seeding function to simulation the tournament. Generally, in this case the difference between random seeding and tournament seeding is not very big. But we can still see 
+Then we try using our seeding function to simulation the tournament. Generally, in this case the difference between random seeding and tournament seeding is not very big. But we can still see that weaker teams have a lower chance of winning when using tournament seeding, as they have higher chance being eliminated by stronger team in early rounds.
 ```{r,echo=F}
 #ranks of each team using seeding
 ranks <- lapply(1:n, getRank, res = res_s)
