@@ -267,31 +267,49 @@ simRound <- function(bracket, matchups) {
 }
 
 #' Simulates an entire tournament given a bracket and probability matrix.
-#' @author Jeffrey Chao, Philip Dohm
+#' @author Jeffrey Chao, Philip Dohm, Ziqin Xiong
 #' 
 #' @param bracket is the bracket structure.
 #' @param matchups is the probability matrix.
+#' @param rank logical; if TRUE, return final standing of teams instead 
+#' of winners and wins count. Set to FALSE by default
 #' 
 #' @return list containing the tournment winner and vector that stores
-#' how many wins each team has gotten.
+#' how many wins each team has gotten. Or if rank = T, a list of 
+#' final standing of teams.
 #' 
-simTournament <- function(bracket, matchups) {
+simTournament <- function(bracket, matchups, rank = F) {
     nTeams <- length(bracket)
     newBracket <- bracket
     nRounds <- log2(nTeams)
     
-    results = c("Winner"=-1,"WinsPerTeam"=list(rep(0, ncol(matchups))))
-    
-    for (round in 1:nRounds) {
-        #winsPrev = results["WinsPerTeam"]
-        newBracket <- simRound(newBracket, matchups)
-        for(i in newBracket){
-            results$WinsPerTeam[i] = results$WinsPerTeam[i]+1
+    if(rank){
+        results <- numeric(nTeams)
+        
+        for (round in 1:nRounds) {
+            oldBracket <- newBracket
+            newBracket <- simRound(newBracket, matchups)
+            results[(2^(nRounds-round)+1):2^(nRounds-round+1)] <- 
+                setdiff(oldBracket,newBracket)
         }
+        
+        results[1] <- newBracket
+        return(results)
     }
-    
-    results["Winner"] = newBracket
-    return(results)
+    else{
+        results = c("Winner"=-1,"WinsPerTeam"=list(rep(0, ncol(matchups))))
+        
+        for (round in 1:nRounds) {
+            #winsPrev = results["WinsPerTeam"]
+            newBracket <- simRound(newBracket, matchups)
+            for(i in newBracket){
+                results$WinsPerTeam[i] = results$WinsPerTeam[i]+1
+            }
+        }
+        
+        results["Winner"] = newBracket
+        return(results)
+    }
 }
 
 #' Gets the win distribution for teams after a number of simulations.
@@ -485,6 +503,36 @@ jack_replicate <- function(x, estimator = mean){
     sumsq=sum((jack-mean(jack))^2)
     se_j <- sqrt((n-1)/n)*sqrt(sumsq)
     list(jack = jack,bias = bias_j, se = se_j)
+}
+
+#' Get ranks of a team in tournament simulation
+#' @author Ziqin Xiong
+#' 
+#' @param x index of the team
+#' @param res simulation results from simTournament using
+#' rank = T
+#' @param lower logical; if TURE, pick lowest rank for a range of rank. 
+#' for example, if rank is 5th-8th, let rank be 8. If FALSE, pick highest. 
+#' Set to T by default
+#' 
+#' @return list of rank of x in simulations
+#' 
+getRank <- function(x, res, lower = T){
+  n <- length(res)
+  rank <- numeric(n)
+  for(i in 1:n){
+    roughrank <- which(res[[i]]==x)
+    if(roughrank == 2 | roughrank == 1)
+      rank[i] <- roughrank
+    #pick lowest rank for a range of rank
+    #for example, if rank is 5th-8th, let rank be 8
+    else if(lower == T)
+      rank[i] <- 2^ceiling(log2(roughrank))
+    #if lower = F pick highest rank in range
+    else 
+      rank[i] <- 2^floor(log2(roughrank))+1
+  }
+  rank
 }
 ```
 
@@ -1015,31 +1063,49 @@ simRound <- function(bracket, matchups) {
 }
 
 #' Simulates an entire tournament given a bracket and probability matrix.
-#' @author Jeffrey Chao, Philip Dohm
+#' @author Jeffrey Chao, Philip Dohm, Ziqin Xiong
 #' 
 #' @param bracket is the bracket structure.
 #' @param matchups is the probability matrix.
+#' @param rank logical; if TRUE, return final standing of teams instead 
+#' of winners and wins count. Set to FALSE by default
 #' 
 #' @return list containing the tournment winner and vector that stores
-#' how many wins each team has gotten.
+#' how many wins each team has gotten. Or if rank = T, a list of 
+#' final standing of teams.
 #' 
-simTournament <- function(bracket, matchups) {
+simTournament <- function(bracket, matchups, rank = F) {
     nTeams <- length(bracket)
     newBracket <- bracket
     nRounds <- log2(nTeams)
     
-    results = c("Winner"=-1,"WinsPerTeam"=list(rep(0, ncol(matchups))))
-    
-    for (round in 1:nRounds) {
-        #winsPrev = results["WinsPerTeam"]
-        newBracket <- simRound(newBracket, matchups)
-        for(i in newBracket){
-            results$WinsPerTeam[i] = results$WinsPerTeam[i]+1
+    if(rank){
+        results <- numeric(nTeams)
+        
+        for (round in 1:nRounds) {
+            oldBracket <- newBracket
+            newBracket <- simRound(newBracket, matchups)
+            results[(2^(nRounds-round)+1):2^(nRounds-round+1)] <- 
+                setdiff(oldBracket,newBracket)
         }
+        
+        results[1] <- newBracket
+        return(results)
     }
-    
-    results["Winner"] = newBracket
-    return(results)
+    else{
+        results = c("Winner"=-1,"WinsPerTeam"=list(rep(0, ncol(matchups))))
+        
+        for (round in 1:nRounds) {
+            #winsPrev = results["WinsPerTeam"]
+            newBracket <- simRound(newBracket, matchups)
+            for(i in newBracket){
+                results$WinsPerTeam[i] = results$WinsPerTeam[i]+1
+            }
+        }
+        
+        results["Winner"] = newBracket
+        return(results)
+    }
 }
 ```
 
@@ -1328,6 +1394,39 @@ jack_replicate <- function(x, estimator = mean){
     sumsq=sum((jack-mean(jack))^2)
     se_j <- sqrt((n-1)/n)*sqrt(sumsq)
     list(jack = jack,bias = bias_j, se = se_j)
+}
+```
+
+### General Helper Functions for Analysis
+```{r}
+#' Get ranks of a team in tournament simulation
+#' @author Ziqin Xiong
+#' 
+#' @param x index of the team
+#' @param res simulation results from simTournament using
+#' rank = T
+#' @param lower logical; if TURE, pick lowest rank for a range of rank. 
+#' for example, if rank is 5th-8th, let rank be 8. If FALSE, pick highest. 
+#' Set to T by default
+#' 
+#' @return list of rank of x in simulations
+#' 
+getRank <- function(x, res, lower = T){
+  n <- length(res)
+  rank <- numeric(n)
+  for(i in 1:n){
+    roughrank <- which(res[[i]]==x)
+    if(roughrank == 2 | roughrank == 1)
+      rank[i] <- roughrank
+    #pick lowest rank for a range of rank
+    #for example, if rank is 5th-8th, let rank be 8
+    else if(lower == T)
+      rank[i] <- 2^ceiling(log2(roughrank))
+    #if lower = F pick highest rank in range
+    else 
+      rank[i] <- 2^floor(log2(roughrank))+1
+  }
+  rank
 }
 ```
 
