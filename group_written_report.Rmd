@@ -674,7 +674,7 @@ We are interested in analyzing the differences in the prior and posterior distri
 2. The underdog (or lower seeded team) wins in the first round
 3. One of the top seeds (1-4) is upset by the lower seeded team (13-16), and all other games remain the same.
 
-#### 1. The favorite team wins in the first round
+#### 1. The favorite teams win in the first round
 
 We will plot the win distributions for all of the favorite teams (seeds 1-8), given that they win in the first round. The solid line indicates the posterior win distribution, while the dashed line indicates the prior win distribution.
 
@@ -1243,7 +1243,7 @@ This section is divided into subsections discussing the results of each of the f
 2. The underdog (or lower seeded team) wins in the first round
 3. One of the top seeds (1-4) is upset by the lower seeded team (13-16), and all other games remain the same.
 
-#### 1. The favorite team wins in the first round
+#### 1. The favorite teams win in the first round
 
 We are interested in seeing the impact of the favorite/high seed team winning in the first round. For this case, we only examine plots of the prior and posterior distributions for the top 8 seeded teams (since the others all lose in the first round for the posterior). Notice that all of the posterior distributions displayed have probability 0 at 0 wins because the team already won in the first round.
 
