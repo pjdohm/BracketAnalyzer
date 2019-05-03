@@ -569,7 +569,7 @@ Additionally, we look up some actual game histories and calculate the actual cro
 
 #### MLB Game Logs data
 
-Major League Baseball (MLB) is the oldest and largest professional baseball organization in U.S and Canada. It has 30 teams playing in 2 major leagues: National League (NL) and American League (AL). NL and AL were seperate legal entitles formed in 1876 and 1901 respectilvely, and they cooperated to found MLB in 1903.  We obtain free MLB game logs from www.retrosheet.org. Since game statistics are highly time-sensitive (a strong team may lose its dominance in 1 season), we use recent 3 years' game log (2016, 2017 and 2018) to build the winning probability matrix $M$.
+Major League Baseball (MLB) is the oldest and largest professional baseball organization in U.S and Canada. It has 30 teams playing in 2 major leagues: National League (NL) and American League (AL). NL and AL were seperate legal entitles formed in 1876 and 1901 respectilvely, and they cooperated to found MLB in 1903.  We obtain free MLB game logs from www.retrosheet.org. Since game statistics are highly time-sensitive (a strong team may lose its dominance in 1 season), we use recent 3 years' game log (2016, 2017 and 2018) to build the winning probability matrix $M$. 
 
 ```{r, echo=F}
 gl16 <- read.csv("mlb/mlb_data/GL2016.TXT",header = F)[,c(4,5,10,7,8,11)]
