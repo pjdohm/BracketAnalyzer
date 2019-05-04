@@ -690,14 +690,17 @@ for (i in 1:16) {
 
 A discussion of these results can be found in section [Bayesian Discussion].
 
-### Team Power Estimation via Resampling
-From the tournament results we generated, we have several possible estimator to estimate the real team power. We can use Bootstrap resampling to get more information about that estimator. 
+### Team Power Estimation
 
-#### Team Power Estimated by average Team Ranks
+From the tournament results we generated, we have several possible estimators to estimate the real team power. We can use Bootstrap resampling to get more information about that estimator. 
+
+#### Team Power Estimated by Average Team Ranks
+
 One obvious estimator is the average team rank of each team. Here we generate team power using default `genNormalPowers(n)`, a generic function to generate normal variates. 
 
-##### Random seeding
-We first try using random seeding for every tournament simulation. The boxplot below is the result we have. We can see for some teams with similar team power, their average ranks are very close. And sometimes the team with lower team power actually have higher mean rank (but the confidence intervals are highly overlapped). 
+##### Random Seeding
+
+We first try using random seeding for every tournament simulation. The boxplot below is the result we have. We can see for some teams with similar team power, their average ranks are very close, and sometimes the team with lower team power actually have higher mean rank (but the confidence intervals are highly overlapped). 
 
 ```{r, echo=F}
 # setup
@@ -727,8 +730,10 @@ for(i in 1:n){
 mtext("Relative Real Team Power", side = 4, line = 1)
 ```
 
-##### Tournament seeding
-Then we try using our seeding function to simulation the tournament. We can see in this case, the difference between teams increases. And the situation of team with lower team power having higher rank becomes less. Generally speaking, with tournament seeding, average team rank represents the team power better. 
+##### Tournament Seeding
+
+Then we try using our seeding function to simulation the tournament. We can see in this case, the difference between teams increases, and the situation of teams with lower team power having higher rank becomes less. Generally speaking, with tournament seeding, average team rank represents the team power better. 
+
 
 ```{r,echo=F}
 #With our seeding
@@ -756,9 +761,9 @@ mtext("Relative Real Team Power", side = 4, line = 1)
 
 Another obvious estimator is the probability of winning. 
 
-##### Random seeding
+##### Random Seeding
 
-Similarly, we first try using random seeding for every tournament simulation. For the strong teams (1-7), the results are similar to using the ranks. For stronger teams, the difference between teams are higher. But as weaker teams generally have very low chance to win, difference between them are not very large. One possible solution is to change chance to win to chance of getting top n, n depends on the number of teams.
+Similarly, we first try using random seeding for every tournament simulation. For the strong teams (1-7), the results are similar to using the ranks. For stronger teams, the difference between teams are higher, but for weaker teams, these generally  have very low chance to win; the difference between them is not very large. One possible solution is to change chance to win to chance of getting in the top $n$ where $n$ depends on the number of teams.
 
 ```{r, echo=F}
 #ranks of each team
@@ -781,9 +786,9 @@ for(i in 1:n){
 mtext("Relative Real Team Power", side = 4, line = 1)
 ```
 
-##### Tournament seeding
+##### Tournament Seeding
 
-Then we try using our seeding function to simulation the tournament. Generally, in this case the difference between random seeding and tournament seeding is not very big. But we can still see that weaker teams have a lower chance of winning when using tournament seeding, as they have higher chance being eliminated by stronger team in early rounds.
+Then we try using our seeding function to simulation the tournament. Generally, in this case the difference between random seeding and tournament seeding is not very big; however, we can still see that weaker teams have a lower chance of winning when using tournament seeding, as they have higher chance of being eliminated by stronger team in early rounds.
 
 ```{r,echo=F}
 #ranks of each team using seeding
@@ -805,6 +810,7 @@ for(i in 1:n){
 }
 mtext("Relative Real Team Power", side = 4, line = 1)
 ```
+
 
 #### MLB Team Power Estimation
 
@@ -878,13 +884,13 @@ boxplot(mean_boot_raw[orders],horizontal = T, las = 1, xlab = 'Mean rank',
 ```
 
 
-### Parameter Analysis via Resampling
+### Parameter Analysis
 
 In general, we are interested in studying how changing the parameters of the team power distribution would affect the tournament outcome. In this report, we demonstrate this type of study with the specific question: how do the parameters affect the probability that the strongest team wins?
 
 We consider teams 1 to 8 (team 1 being the strongest). For each parameter setting, we simulate the tournament 1000 times using random seeding, and accordingly obtain a vector of 1000 winner team indices. To reduce the influence of chance in generating a particular cross-team winning probability matrix, we regenerate it and also update the seeding in each simulation. We use the proportion of tournament wins by team 1 as the estimator. We use Bootstrap to get a distribution of this estimator.
 
-We compared the resulting distribution for various $\mu$ and $\sigma$ values in Normal distribution, various $\alpha$ values in Gamma distribution, and various $\lambda$ values in Exponential distribution. Our results can be summarized in the box plot below, and their interpretations are provided in the [Parameter Analysis via Resampling] section.
+We compared the resulting distribution for various $\mu$ and $\sigma$ values in Normal distribution, various $\alpha$ values in Gamma distribution, and various $\lambda$ values in Exponential distribution. Our results can be summarized in the box plot below, and their interpretations are provided in the [Parameter Analysis] section.
 
 ```{r, echo=FALSE, fig.pos="h", fig.align="center"}
 ## Results
@@ -1223,11 +1229,11 @@ boxplot(
 title("Probability that the strongest team wins")
 ```
 
-### Seeding Effect Analysis via Resampling
+### Seeding Effect Analysis
 
 Like parameter analysis, we are also interested in studying how different seeding options would affect the tournament outcome, and in particular the probability that the strongest team wins. 
 
-We use the same bootstrap procedure as described in the parameter analysis section. We compared the resulting distribution for random seeding, tournament seeding, and left skewed seeding. Likewise, our results can be summarized in the box plot below, and their interpretations are provided in the [Seeding Effect Analysis via Resampling] section.
+We use the same bootstrap procedure as described in the parameter analysis section. We compared the resulting distribution for random seeding, tournament seeding, and left skewed seeding. Likewise, our results can be summarized in the box plot below, and their interpretations are provided in the [Seeding Effect Analysis] section.
 
 ```{r, echo=FALSE, fig.pos="h", fig.align="center"}
 # Random seeding
@@ -1344,13 +1350,19 @@ In some cases (e.g. Team 13 when Team 3 is upset by Team 14), there is almost no
 
 Overall, we can say that the impact of an upset is highest on the prior and posterior distributions of a team is largest for the teams in the upset matchup, then for local teams who would play in the next round or two, and lowest for teams on the "other side" of the bracket (i.e. they would not meet until the final round).
 
-### Parameter Analysis via Resampling
+### Team Power Estimation
+
+
+### MLB Team Power Estimation
+
+
+### Parameter Analysis
 
 As shown in the box plot for parameter analysis above, for Normal distribution, controlling the standard deviation, as the mean increases, the team powers are more similar to each other. Hence the probability that the strongest team wins would decrease. In contrast, controlling the mean, as the standard deviation increases, the team powers are more different from each other. Hence the probability that the strongest team wins would increase.
 
 For Gamma distribution, controlling the rate parameter, as the shape parameter increases, the team powers are less right-skewed. And for Exponential distribution, as the rate parameter increases, the team powers are more right-skewed. However, skewness has complex effects on the probability that the strongest team wins. On one hand, the more right-skewed the team power distribution is, the more difference one could potentially observe between the power of the strongest team and that of the other teams. That is, if the strongest team has power at the right tail, then it would have a high probability of winning. On the other hand, the more right-skewed the team power distribution is, the less likely a team could possess power very far in the right end. That is, if the strongest team has power not too far away from the other teams, then it would have a moderate probability of winning. So there is a trade-off between potential and likelihood in analyzing how the skewness of team power distribution would affect the probability that the strongest team wins.
 
-### Seeding Effect Analysis via Resampling
+### Seeding Effect Analysis
 
 As shown in the box plot for seeding effect analysis above, both Tournament Seeding and Left-skewed Seeding increase the chances that the stronger teams win the tournament.
 
