@@ -912,7 +912,38 @@ for(i in 1:n){
 mtext("Relative Real Team Power", side = 4, line = 1)
 ```
 
+#### MLB Team Power Estimation
 
+Above we are trying to estimate the team power we generated. Here another interesting thing we can do is we can estimate the team power of MLB teams with game logs data. We use random seeding first as we don't have team powers to assign tournament seeding.
+
+##### Average Team Ranks 
+```{r, echo = F}
+nSim = 1000
+#add 2 dummy team as there're 30 teams in NLB
+numTeams <- 32
+M <- cbind(rbind(mlbM,numeric(30),numeric(30)),rep(1.,32),rep(1.,32))
+M[32,31] <- 0
+
+res = replicate(nSim, simTournament(
+  sample(1:numTeams), M, rank = T),simplify = FALSE)
+#ranks of each team
+ranks <- lapply(1:numTeams, getRank, res = res)
+#bootstrap estimation on mean of ranks of each team
+mean_boot <- lapply(ranks, boot_replicate)
+#a box plot of ranking of each team
+mean_boot_raw <- lapply(mean_boot, function(x) x$boot)
+#mlb team names
+mlbteam <- read.csv('mlb/mlb_data/TEAMABR.TXT',header = F)
+names(mean_boot_raw) <- 
+    paste(mlbteam[[3]],mlbteam[[4]])[match(dimnames(M)[[1]],mlbteam[[1]])]
+names(mean_boot_raw)[15] <- 'Miami Marlins'
+```
+
+```{r, echo = F, fig.height=10}
+par(mar = c(5,8,4,2),cex.axis=0.75)
+boxplot(mean_boot_raw[1:30],horizontal = T, las = 1, xlab = 'Mean rank',
+        main = 'Bootstrap Resampling of Mean Rank of MLB Teams')
+```
 
 ### Parameter Analysis via Resampling
 
