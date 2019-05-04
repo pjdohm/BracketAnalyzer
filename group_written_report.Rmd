@@ -445,6 +445,14 @@ include_graphics("Figure 1.png")
 
 Our problem of interest consists of discovering the most likely bracket outcome in a tournament given data on head-to-head matchups between teams.  The outcome of this type of analysis is potentially important to coaches, viewers, and the team members themselves.  It can be especially important to sports bettors, who traditionally rely on human intuition rather than data-driven techniques to make their bets.  According to sports journalist and bracketology expert Richard Sandomir, studying bracket prediction can have relevance beyond sports, such as in pop culture, nature, and history.  
 
+### Goals
+
+Through this analysis, our goal is to answer these questions:  
+
+- How does changing the parameters of the team power distribution and the seeding method affect the tournament outcome?
+- What is the probability of winning for each MLB team and how does seeding affect this?
+- How certain preliminary results change the distribution of wins for each team?
+
 -----
 
 ## Methods
@@ -1278,6 +1286,9 @@ Overall, we can say that the impact of an upset is highest on the prior and post
 
 ### Team Power Estimation
 
+In general, random seeding causes average teams (based on team power) to have higher mean ranks than tournament seeding, which causes mean ranks for each team to closely follow the team power. Notice how in random seeding, we sometimes see teams with lower team powers get ranked higher; however, for tournament seeding, this is not as significant. 
+
+With tournament seeding, stronger teams get higher probabilities of winning and weaker teams get lower probabilities of winning. On the other hand, random seeding gives stronger teams lower probabilities of winning and weaker teams higher probabilities of winning.
 
 ### MLB Team Power Estimation
 
