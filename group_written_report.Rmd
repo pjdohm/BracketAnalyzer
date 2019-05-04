@@ -429,6 +429,15 @@ getRank <- function(x, res, lower = T){
 
 ## Abstract
 
+This report describes a Monte-Carlo based bracket analysis tool built in R.  Many sports leagues utilize bracket-based tournaments to determine the winner of the league.  By utilizing the statistical methods learned in this class, we can discover insights about likely bracket outcomes based on team win distributions.
+
+We wrote multiple seeding and team power functions in order to introduce changes in the likely bracket outcome.  These different functions are used during tournament simulation to discover how brackets outcomes change when pre-tournament conditions are changed.  
+	
+Through Bayesian Analysis, we obtain the prior and posterior win distributions of each team, given various conditions. Possible conditions include certain teams win the first round or a high seed is upset in the first round. Through resampling, we analyze various estimators on team power, for example average team ranks and probability of winning, and how random seeding and tournament seeding could affect the results. We use the win probability of the strongest team as an example to analyze how changing the parameters of various distributions, as well as different seeding methods, would affect the tournament outcomes.
+
+We interpret our results and obtain the following insights. First, for strong teams, a win in the first round hardly impacts their win distribution, because such a win is to large extent expected already. In contrast, for underdog teams, a win in the first round significantly impacts their win distribution, because such a win is unexpected and adds a lot of new information. However, the posterior distributions converge to the priors as the tournament goes on, because they eventually meet the stronger teams and are likely to lose against them. Working with real world sports data, we realize that an overall strong team might have lower winning probability facing some specific teams. In this case, seeding have great effects on the final standing. Besides, as expected, for a team power distribution that allows the strongest team to be likely to lead other teams by a large margin, it would have a high win probability. However, it is difficult to analyze how the skewness of the team power distribution would affect the outcome, because of a trade-off between potential and likelihood, as discussed in our [Discussion] section. Among different seeding methods, as expected, a seeding method that tries to match a strong team against a weak team would give the strongest team a high win probability.
+
+The insights derived in this project provide important intuitions for predicting and analyzing tournament outcomes, and the project setup provides a principled way of data-driven analysis.
 
 
 -----
@@ -863,7 +872,7 @@ means <- sapply(mean_boot_raw, mean)
 orders <- order(means)
 ```
 
-We could see here with real game data, difference between teams are not very big and with larger confidence intervals. In spite of that, there are several teams having outstanding performance: Boston Red Sox, Los Angeles Dodgers, Houston Colts and Chicago Cubs. 
+We could see here with real game data, difference between teams are not very big and with larger confidence intervals. In spite of that, there are several teams having outstanding performance: Boston Red Sox, Los Angeles Dodgers, Houston Astros and Chicago Cubs. 
 
 ```{r, echo = F, fig.height=10}
 par(mar = c(5,8,4,2),cex.axis=0.75)
@@ -871,7 +880,7 @@ boxplot(mean_boot_raw[orders[1:30]],horizontal = T, las = 1, xlab = 'Mean rank',
         main = 'Bootstrap Resampling of Mean Rank of MLB Teams')
 ```
 
-##### Average Team Ranks with Tournament seeding
+##### Average Team Ranks with Tournament Seeding
 
 Once we have the simulation results above, we could assign tournament seeding using the team ranks above.
 
@@ -1379,6 +1388,7 @@ With tournament seeding, stronger teams get higher probabilities of winning and 
 
 ### MLB Team Power Estimation
 
+With random seeding, different teams have the chance to play against each other because each tournament has a random bracket. However, with tournament seeding, we are using a fixed bracket based on a the actual game history data. Since random seeding allows each team to play against each other, we get a larger picture of how each team performs against the other teams, and with tournament seeding, we are able to find the probability of each team winning based off a specific tournament bracket. This makes certain teams have stronger likelihood of winning. For example, the Boston Red Sox gets a very high probability of winning because of the fixed bracket.
 
 ### Parameter Analysis
 
