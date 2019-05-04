@@ -698,6 +698,7 @@ One obvious estimator is the average team rank of each team. Here we generate te
 
 ##### Random seeding
 We first try using random seeding for every tournament simulation. The boxplot below is the result we have. We can see for some teams with similar team power, their average ranks are very close. And sometimes the team with lower team power actually have higher mean rank (but the confidence intervals are highly overlapped). 
+
 ```{r, echo=F}
 # setup
 nSim <- 1000 # numer of simulations
@@ -728,6 +729,7 @@ mtext("Relative Real Team Power", side = 4, line = 1)
 
 ##### Tournament seeding
 Then we try using our seeding function to simulation the tournament. We can see in this case, the difference between teams increases. And the situation of team with lower team power having higher rank becomes less. Generally speaking, with tournament seeding, average team rank represents the team power better. 
+
 ```{r,echo=F}
 #With our seeding
 t <- tournament_seeding(n) # tournament seeding
@@ -757,6 +759,7 @@ Another obvious estimator is the probability of winning.
 ##### Random seeding
 
 Similarly, we first try using random seeding for every tournament simulation. For the strong teams (1-7), the results are similar to using the ranks. For stronger teams, the difference between teams are higher. But as weaker teams generally have very low chance to win, difference between them are not very large. One possible solution is to change chance to win to chance of getting top n, n depends on the number of teams.
+
 ```{r, echo=F}
 #ranks of each team
 ranks <- lapply(1:n, getRank, res = res_r)
@@ -781,6 +784,7 @@ mtext("Relative Real Team Power", side = 4, line = 1)
 ##### Tournament seeding
 
 Then we try using our seeding function to simulation the tournament. Generally, in this case the difference between random seeding and tournament seeding is not very big. But we can still see that weaker teams have a lower chance of winning when using tournament seeding, as they have higher chance being eliminated by stronger team in early rounds.
+
 ```{r,echo=F}
 #ranks of each team using seeding
 ranks <- lapply(1:n, getRank, res = res_s)
@@ -792,7 +796,7 @@ win_boot <- lapply(wins, boot_replicate)
 win_boot_raw_r <- lapply(win_boot, function(x) x$boot)
 
 boxplot(win_boot_raw_r,horizontal = T,xlab = 'Chance of winning',ylab = 'Team (ordered by team power)',
-        main = "Bootstrap estimated probability of winning with random seeding")
+        main = "Bootstrap estimated probability of winning with tournament seeding")
 xlim <- par("usr")[1:2]
 xrange = xlim[2] - xlim[1]
 powerrange <- power[1] - power[n]
@@ -804,9 +808,12 @@ mtext("Relative Real Team Power", side = 4, line = 1)
 
 #### MLB Team Power Estimation
 
-Above we are trying to estimate the team power we generated. Here another interesting thing we can do is we can estimate the team power of MLB teams with game logs data. We use random seeding first as we don't have team powers to assign tournament seeding.
+Above we are trying to estimate the team power we generated. Here another interesting thing we can do is we can estimate the team power of MLB teams with game logs data. 
 
-##### Average Team Ranks 
+##### Average Team Ranks with Random Seeding 
+
+We use random seeding first as we don't have team powers to assign tournament seeding.
+
 ```{r, echo = F}
 nSim = 1000
 #add 2 dummy team as there're 30 teams in NLB
@@ -827,13 +834,49 @@ mlbteam <- read.csv('mlb/mlb_data/TEAMABR.TXT',header = F)
 names(mean_boot_raw) <- 
     paste(mlbteam[[3]],mlbteam[[4]])[match(dimnames(M)[[1]],mlbteam[[1]])]
 names(mean_boot_raw)[15] <- 'Miami Marlins'
+means <- sapply(mean_boot_raw, mean)
+orders <- order(means)
 ```
+
+We could see here with real game data, difference between teams are not very big and with larger confidence intervals. In spite of that, there are several teams having outstanding performance: Boston Red Sox, Los Angeles Dodgers, Houston Colts and Chicago Cubs. 
 
 ```{r, echo = F, fig.height=10}
 par(mar = c(5,8,4,2),cex.axis=0.75)
-boxplot(mean_boot_raw[1:30],horizontal = T, las = 1, xlab = 'Mean rank',
+boxplot(mean_boot_raw[orders[1:30]],horizontal = T, las = 1, xlab = 'Mean rank',
         main = 'Bootstrap Resampling of Mean Rank of MLB Teams')
 ```
+
+##### Average Team Ranks with Tournament seeding
+
+Once we have the simulation results above, we could assign tournament seeding using the team ranks above.
+
+```{r, echo = F}
+t <- orders[tournament_seeding(32)] # tournament seeding
+res = replicate(nSim, simTournament(
+  t, M, rank = T),simplify = FALSE)
+#ranks of each team
+ranks <- lapply(1:numTeams, getRank, res = res)
+#bootstrap estimation on mean of ranks of each team
+mean_boot <- lapply(ranks, boot_replicate)
+#a box plot of ranking of each team
+mean_boot_raw <- lapply(mean_boot, function(x) x$boot)
+#mlb team names
+mlbteam <- read.csv('mlb/mlb_data/TEAMABR.TXT',header = F)
+names(mean_boot_raw) <- 
+    paste(mlbteam[[3]],mlbteam[[4]])[match(dimnames(M)[[1]],mlbteam[[1]])]
+names(mean_boot_raw)[15] <- 'Miami Marlins'
+means <- sapply(mean_boot_raw, mean)
+orders <- order(means)[1:30]
+```
+
+We can see the results below is dramatically different from the results we get using random seeding. Here difference between teams become much larger. The top teams now become Texas Rangers, Colorado Rockies, Boston Red Sox and Los Angeles Dodgers. And Miami Marlins, Oakland Athletics, Philadelphia Phillies and Tampa Bay Devil Rays always get 16-32 (We assign rank 32 to 16th - 32th), meaning that they always got eliminated in first round. This might because with fixed seeding, one team will always face a fixed team in tournament. In real sports, some teams may have overall strong power, but being weak facing some specific team. Further discussion of this could be found in [Discussion].
+
+```{r, echo = F, fig.height=10}
+par(mar = c(5,8,4,2),cex.axis=0.75)
+boxplot(mean_boot_raw[orders],horizontal = T, las = 1, xlab = 'Mean rank',
+        main = 'Bootstrap Resampling of Mean Rank of MLB Teams')
+```
+
 
 ### Parameter Analysis via Resampling
 
