@@ -858,6 +858,7 @@ mlbteam <- read.csv('mlb/mlb_data/TEAMABR.TXT',header = F)
 names(mean_boot_raw) <- 
     paste(mlbteam[[3]],mlbteam[[4]])[match(dimnames(M)[[1]],mlbteam[[1]])]
 names(mean_boot_raw)[15] <- 'Miami Marlins'
+names(mean_boot_raw)[12] <- 'Houston Astros'
 means <- sapply(mean_boot_raw, mean)
 orders <- order(means)
 ```
@@ -875,6 +876,7 @@ boxplot(mean_boot_raw[orders[1:30]],horizontal = T, las = 1, xlab = 'Mean rank',
 Once we have the simulation results above, we could assign tournament seeding using the team ranks above.
 
 ```{r, echo = F}
+orders <- c(5,14, 7,12,18,16,28,24,22,29,10, 9,26,30,27, 1, 2, 4,21,17,25,20,19,11, 3, 6,15,13, 8,23,31,32)
 t <- orders[tournament_seeding(32)] # tournament seeding
 res = replicate(nSim, simTournament(
   t, M, rank = T),simplify = FALSE)
@@ -889,11 +891,12 @@ mlbteam <- read.csv('mlb/mlb_data/TEAMABR.TXT',header = F)
 names(mean_boot_raw) <- 
     paste(mlbteam[[3]],mlbteam[[4]])[match(dimnames(M)[[1]],mlbteam[[1]])]
 names(mean_boot_raw)[15] <- 'Miami Marlins'
+names(mean_boot_raw)[12] <- 'Houston Astros'
 means <- sapply(mean_boot_raw, mean)
 orders <- order(means)[1:30]
 ```
 
-We can see the results below is dramatically different from the results we get using random seeding. Here difference between teams become much larger. The top teams now become Texas Rangers, Colorado Rockies, Boston Red Sox and Los Angeles Dodgers. And Miami Marlins, Oakland Athletics, Philadelphia Phillies and Tampa Bay Devil Rays always get 16-32 (We assign rank 32 to 16th - 32th), meaning that they always got eliminated in first round. This might because with fixed seeding, one team will always face a fixed team in tournament. In real sports, some teams may have overall strong power, but being weak facing some specific team. Further discussion of this could be found in [Discussion].
+We can see the results below is dramatically different from the results we get using random seeding. Here difference between teams become much larger. The top teams now become "Boston Red Sox, Los Angeles Dodgers, Colorado Rockies and New York Yankees. And Oakland Athletics always get 16-32 (We assign rank 32 to 16th - 32th), meaning that it always got eliminated in first round. This might because with fixed seeding, one team will always face a fixed team in tournament. In real sports, some teams may have overall strong power, but being weak facing some specific team. Further discussion of this could be found in [Discussion].
 
 ```{r, echo = F, fig.height=10}
 par(mar = c(5,8,4,2),cex.axis=0.75)
