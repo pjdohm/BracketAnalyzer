@@ -439,6 +439,7 @@ We interpret our results and obtain the following insights. First, for strong te
 
 The insights derived in this project provide important intuitions for predicting and analyzing tournament outcomes, and the project setup provides a principled way of data-driven analysis.
 
+Our GitHub repository is [BracketAnalyzer](https://github.com/pjdohm/BracketAnalyzer). 
 
 -----
 
