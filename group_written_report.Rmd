@@ -791,7 +791,7 @@ xlim <- par("usr")[1:2]
 xrange = xlim[2] - xlim[1]
 powerrange <- power[1] - power[n]
 for(i in 1:n){
-  lines(c(xlim[2],xlim[2] - power[i]*(xrange/powerrange)),c(i,i), col = 'red')
+  lines(c(xlim[1],xlim[1] + power[i]*(xrange/powerrange)*0.8),c(i,i), col = 'red')
 }
 mtext("Relative Real Team Power", side = 4, line = 1)
 ```
@@ -816,7 +816,7 @@ xlim <- par("usr")[1:2]
 xrange = xlim[2] - xlim[1]
 powerrange <- power[1] - power[n]
 for(i in 1:n){
-  lines(c(xlim[2],xlim[2] - power[i]*(xrange/powerrange)),c(i,i), col = 'red')
+  lines(c(xlim[1],xlim[1] + power[i]*(xrange/powerrange)*0.8),c(i,i), col = 'red')
 }
 mtext("Relative Real Team Power", side = 4, line = 1)
 ```
