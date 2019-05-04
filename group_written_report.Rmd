@@ -454,6 +454,14 @@ Through this analysis, our goal is to answer these questions:
 - How do certain preliminary results change the distribution of wins for each team?
 - How does seeding affect average team rank?
 
+### Data
+
+We use both generated data and actual data from MLB game history. For more information, see [Data Generation].
+
+### Exploratory Data Analysis
+
+For our simulation, we only use powers of 2 as the number of teams. Additional exploratory data analysis can be found at [MLB Data] and [Bayesian Analysis].
+
 
 -----
 
