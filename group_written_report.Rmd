@@ -579,6 +579,10 @@ We are interested in analyzing the differences in the prior and posterior distri
 2. The underdog (or lower seeded team) wins in the first round
 3. One of the top seeds (1-4) is upset by the lower seeded team (13-16), and all other games remain the same.
 
+### Resampling Methods
+
+We implement the generic functions for Bootstrap and Jackknife resampling. We could analyze many team statistics based on these resampling methods without running too many simulations. For example, we could get the distribution of mean rank of each team in simulation and obtain a confidence interval of that. Some other interesting estimator includes: probability of getting top n; standard deviation of ranks, etc..
+
 -----
 
 ## Results
