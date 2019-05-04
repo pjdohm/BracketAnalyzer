@@ -706,10 +706,10 @@ set.seed(1) # for consistency
 power <- genNormalPowers(n)
 M <- genCrossTeamWinningProbabilities(power) # matchups
 #with random seeding
-res = replicate(nSim, simTournament(
+res_r = replicate(nSim, simTournament(
   sample(1:n), M, rank = T),simplify = FALSE)
 #ranks of each team
-ranks <- lapply(1:n, getRank, res = res)
+ranks <- lapply(1:n, getRank, res = res_r)
 #bootstrap estimation on mean of ranks of each team
 mean_boot <- lapply(ranks, boot_replicate)
 #a box plot of ranking of each team
@@ -726,21 +726,21 @@ for(i in 1:n){
 mtext("Relative Real Team Power", side = 4, line = 1)
 ```
 
-##### Appropriate seeding
-Then we try using our seeding function to simulation the tournament. We can see in this case, the difference between teams increases. And the situation of team with lower team power having higher rank becomes less. Generally speaking, with appropriate seeding, average team rank represents the team power better. 
+##### Tournament seeding
+Then we try using our seeding function to simulation the tournament. We can see in this case, the difference between teams increases. And the situation of team with lower team power having higher rank becomes less. Generally speaking, with tournament seeding, average team rank represents the team power better. 
 ```{r,echo=F}
 #With our seeding
 t <- tournament_seeding(n) # tournament seeding
-res = replicate(nSim, simTournament(
+res_s = replicate(nSim, simTournament(
   t, M, rank = T),simplify = FALSE)
 #ranks of each team
-ranks <- lapply(1:n, getRank, res = res)
+ranks <- lapply(1:n, getRank, res = res_s)
 #bootstrap estimation on mean of ranks of each team
 mean_boot <- lapply(ranks, boot_replicate)
 #a box plot of ranking of each team
 mean_boot_raw_s <- lapply(mean_boot, function(x) x$boot)
 boxplot(mean_boot_raw_s,horizontal = T,xlab = 'Mean rank',ylab = 'Team (ordered by team power)',
-        main = "Bootstrap estimated mean rank of each team with random seeding")
+        main = "Bootstrap estimated mean rank of each team with tournament seeding")
 xlim <- par("usr")[1:2]
 xrange = xlim[2] - xlim[1]
 powerrange <- power[1] - power[n]
@@ -750,7 +750,58 @@ for(i in 1:n){
 mtext("Relative Real Team Power", side = 4, line = 1)
 ```
 
-#### Team Power Estimated by average Team Ranks
+#### Team Power Estimated by Probability of Winning
+
+Another obvious estimator is the probability of winning. 
+
+##### Random seeding
+
+Similarly, we first try using random seeding for every tournament simulation. For the strong teams (1-7), the results are similar to using the ranks. For stronger teams, the difference between teams are higher. But as weaker teams generally have very low chance to win, difference between them are not very large. One possible solution is to change chance to win to chance of getting top n, n depends on the number of teams.
+```{r, echo=F}
+#ranks of each team
+ranks <- lapply(1:n, getRank, res = res_r)
+#winnning times of each team 
+wins <- lapply(ranks, function(x) as.integer(x==1))
+#bootstrap estimation on mean of winning chance of each team
+win_boot <- lapply(wins, boot_replicate)
+#a box plot of ranking of each team
+win_boot_raw_r <- lapply(win_boot, function(x) x$boot)
+
+boxplot(win_boot_raw_r,horizontal = T,xlab = 'Chance of winning',ylab = 'Team (ordered by team power)',
+        main = "Bootstrap estimated probability of winning with random seeding")
+xlim <- par("usr")[1:2]
+xrange = xlim[2] - xlim[1]
+powerrange <- power[1] - power[n]
+for(i in 1:n){
+  lines(c(xlim[2],xlim[2] - power[i]*(xrange/powerrange)),c(i,i), col = 'red')
+}
+mtext("Relative Real Team Power", side = 4, line = 1)
+```
+
+##### Tournament seeding
+
+Then we try using our seeding function to simulation the tournament. Generally, in this case the difference between random seeding and tournament seeding is not very big. But we can still see that weaker teams have a lower chance of winning when using tournament seeding, as they have higher chance being eliminated by stronger team in early rounds.
+```{r,echo=F}
+#ranks of each team using seeding
+ranks <- lapply(1:n, getRank, res = res_s)
+#winnning times of each team 
+wins <- lapply(ranks, function(x) as.integer(x==1))
+#bootstrap estimation on mean of winning chance of each team
+win_boot <- lapply(wins, boot_replicate)
+#a box plot of ranking of each team
+win_boot_raw_r <- lapply(win_boot, function(x) x$boot)
+
+boxplot(win_boot_raw_r,horizontal = T,xlab = 'Chance of winning',ylab = 'Team (ordered by team power)',
+        main = "Bootstrap estimated probability of winning with random seeding")
+xlim <- par("usr")[1:2]
+xrange = xlim[2] - xlim[1]
+powerrange <- power[1] - power[n]
+for(i in 1:n){
+  lines(c(xlim[2],xlim[2] - power[i]*(xrange/powerrange)),c(i,i), col = 'red')
+}
+mtext("Relative Real Team Power", side = 4, line = 1)
+```
+
 
 
 ### Parameter Analysis via Resampling
