@@ -451,7 +451,9 @@ Through this analysis, our goal is to answer these questions:
 
 - How does changing the parameters of the team power distribution and the seeding method affect the tournament outcome?
 - What is the probability of winning for each MLB team and how does seeding affect this?
-- How certain preliminary results change the distribution of wins for each team?
+- How do certain preliminary results change the distribution of wins for each team?
+- How does seeding affect average team rank?
+
 
 -----
 
